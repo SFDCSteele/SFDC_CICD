@@ -1,0 +1,198 @@
+<apex:page standardController="Attachment" extensions="attachmentProcessing" cache="false"
+           sidebar="false" showHeader="false">
+    <script type="text/javascript">
+    var maxStringSize = 6000000;    //Maximum String size is 6,000,000 characters
+    var maxFileSize = 4350000;      //After Base64 Encoding, this is the max file size
+    var chunkSize = 950000;         //Maximum Javascript Remoting message size is 1,000,000 characters
+    var attachment;
+    var attachmentName;
+    var fileSize;
+    var positionIndex;
+    var doneUploading;
+    
+    //Method to prepare a file to be attached to the Case bound to the page by the standardController
+    function uploadFile() {
+        var file = document.getElementById('attachmentFile').files[0];
+        console.log(file);
+        if(file != undefined) {
+            if(file.size <= maxFileSize) {
+                attachmentName = file.name;
+                var fileReader = new FileReader();
+                fileReader.onloadend = function(e) {
+                    attachment = window.btoa(this.result);  //Base 64 encode the file before sending it
+                    positionIndex=0;
+                    fileSize = attachment.length;
+                    console.log("Total Attachment Length: " + fileSize);
+                    doneUploading = false;
+                    if(fileSize < maxStringSize) {
+                        uploadAttachment(null);
+                    } else {
+                        alert("Base 64 Encoded file is too large.  Maximum size is " + maxStringSize + " your file is " + fileSize + ".");
+                    }
+                    
+                }
+                fileReader.onerror = function(e) {
+                    alert("There was an error reading the file.  Please try again.");
+                }
+                fileReader.onabort = function(e) {
+                    alert("There was an error reading the file.  Please try again.");
+                }
+                
+                fileReader.readAsBinaryString(file);  //Read the body of the file
+                
+            } else {
+                alert("File must be under 4.3 MB in size.  Your file is too large.  Please try again.");
+            }
+        } else {
+            alert("You must choose a file before trying to upload it");
+        }
+    }
+    
+    //Method to send a file to be attached to the Case bound to the page by the standardController
+    //Sends parameters: Case Id, Attachment (body), Attachment Name, and the Id of the Attachment if it exists to the controller   
+    function uploadAttachment(fileId) {
+        PerformDownload = null;
+        var attachmentBody = "";
+        if(fileSize <= positionIndex + chunkSize) {
+            attachmentBody = attachment.substring(positionIndex);
+            doneUploading = true;
+        } else {
+            attachmentBody = attachment.substring(positionIndex, positionIndex + chunkSize);
+        }
+        console.log("Uploading " + attachmentBody.length + " chars of " + fileSize);
+        attachmentProcessing.doUploadAttachment(
+            '{!Attachment.ParentId}', attachmentBody, attachmentName, fileId, 
+            function(result, event) {
+                console.log(result);
+                if(event.type === 'exception') {
+                    console.log("exception");
+                    console.log(event);
+                } else if(event.status) {
+                    if(result.substring(0,3) == '00P') {
+                        if(doneUploading == true) {
+                            window.open("/{!Attachment.ParentId}", "_blank");
+                            window.location.reload();
+                        } else {
+                            positionIndex += chunkSize;
+                            uploadAttachment(result);
+                        }
+                    }
+                } else {
+                    console.log(event.message);
+                }
+            },
+            {buffer: true, escape: true, timeout: 120000}
+        );
+        }
+
+        function CheckOut(pId) {
+            //alert('Checking out file-1: '+pId);
+            console.log('Checking out file-1: '+pId);
+
+            console.log('after download...');
+            alert('afterdownload');
+    
+        }
+    </script>
+    <apex:form >
+        <apex:pageBlock title="Case Files">
+            <apex:pageBlockTable value="{!Attachments}" var="v">
+                <apex:column >
+                    <apex:outputLink value="{! URLFOR($Action.Attachment.download, v.Id) }">
+                        {!v.Id}
+                    </apex:outputLink>
+                </apex:column>
+                <apex:column >
+					<apex:commandButton value="Check Out 1" onClick="CheckOut('{!v.Id}');return false;"/>        
+                </apex:column>
+               <apex:column >
+                    <apex:commandLink value="Check Out 2y" action="{!checkout}" rerender="hiddenBlock">
+                        <apex:param name="attId"
+                            value="{!v.Id}"
+                            assignTo="{!attachmentValue}"/>
+                    </apex:commandLink>
+            
+                    <apex:pageBlock id="hiddenBlock" rendered="false"></apex:pageBlock>
+                </apex:column>
+
+                <apex:column >
+                    <apex:commandButton value="Check Out 3" action="{!checkout}">
+                    <apex:param name="attId" value="{!v.Id}" assignTo="{!attachmentValue}"/>
+                    </apex:commandButton>
+                </apex:column>
+                <apex:column >
+	                <apex:outputLink value="https://wsteele--c.na33.visual.force.com/{!v.Id}" target="_blank">Download 1</apex:outputLink>
+                </apex:column>
+                <!-- apex:column >
+	                <apex:outputLink value="data:{!contentType};content-disposition:attachment;base64,{!base64Value}" target="_blank">Download 2</apex:outputLink>
+                </apex:column -->
+
+                <apex:column value="{!v.ParentId}"/>
+                <apex:column value="{!v.ContentType}"/>
+                <apex:column value="{!v.Name}"/>
+                <apex:column value="{!v.Description}"/>
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    </apex:form>
+    <br/>
+  <apex:sectionHeader title="Visualforce Example" subtitle="Attachment Upload Example"/>
+
+  <apex:form enctype="multipart/form-data">
+    <apex:pageMessages />
+    <apex:pageBlock title="Upload a Attachment">
+
+      <apex:pageBlockButtons >
+        <apex:commandButton action="{!upload}" value="Save"/>
+      </apex:pageBlockButtons>
+
+      <apex:pageBlockSection showHeader="false" columns="2" id="block1">
+
+        <apex:pageBlockSectionItem >
+          <apex:outputLabel value="File Name" for="fileName"/>
+          <apex:inputText value="{!attachment.name}" id="fileName"/>
+        </apex:pageBlockSectionItem>
+
+        <apex:pageBlockSectionItem >
+          <apex:outputLabel value="File" for="file"/>
+          <apex:inputFile value="{!attachment.body}" filename="{!attachment.name}" id="file"/>
+        </apex:pageBlockSectionItem>
+
+        <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Description" for="description"/>
+          <apex:inputTextarea value="{!attachment.description}" id="description"/>
+        </apex:pageBlockSectionItem>
+
+      </apex:pageBlockSection>
+
+    </apex:pageBlock>
+  </apex:form>
+ <apex:form >
+      <apex:pageBlock title="Upload Attachment">
+            <apex:inputFile style="width:100%" id="fileToUpload" value="{!fileBody}" filename="{!fileName}" />
+            <apex:commandButton value="Upload Attachment" action="{!UploadFile}"/>
+       </apex:pageBlock>
+  </apex:form> 
+      <apex:pageBlock title="FileUpload Attachment">
+    <!-- apex:attribute name="parentId" description="The ID of the record uploaded documents will be attached to." type="String" required="true"/ -->
+
+    <link rel="stylesheet" type="text/css" href="{!$Resource.FileUploadCSS}"/>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"/>
+    <script type="text/javascript" src="{!$Resource.FileUploadJS}"/>
+
+    <script type="text/javascript">
+        var parentId = '5003900001qjBIlAAM';//'{!parentId}'; //Will be used by FileUploadJS.js but must be declared here. Static resources don't support dynamic values.
+    </script>
+
+    <div class="uploadBox">
+        <table cellpadding="0" cellspacing="0" class="uploadTable">
+            <tr>
+                <td><input type="file" multiple="true" id="filesInput" name="file" /></td>
+                <td class="buttonTD">
+                    <input id="uploadButton" type="button" title="Upload" class="btn" value=" Upload "/>
+                    <input id="clear" type="button" title="Clear" class="btn" value=" Clear "/>
+                </td>
+            </tr>
+        </table>
+    </div>    
+    </apex:pageBlock>
+</apex:page>

@@ -1,0 +1,37 @@
+<apex:page standardcontroller="Contact" extensions="USPSTest" showHeader="false"  standardStylesheets="true" cache="false">
+
+	<c:USPS_Address_component ContactObject="{!CurrentContact}" CheckFullZip="true" USPS_USERIDName="{!USPSUserIDCode}" />
+
+	<apex:form id="ContributionRequestForm">
+	    <h2><table>
+            	<tr><td>Organization Information:</td><td>USPS User Id:</td><td>{!USPSUserIDCode}</td></tr>
+            </table></h2>
+	    <table width="98%" border="0">
+		      <tr>
+			        <td><h3>Street:</h3></td>
+			        <td><apex:inputField value="{! Contact.MailingStreet}" id="Street" style="font-family:MS Shell Dlg;font-size:	13.3333px;"/></td>
+			        <td><h3>City:</h3></td>
+			        <td><apex:inputField value="{! Contact.MailingCity}" id="City"/></td>
+			        <td><h3>State:</h3></td>
+			        <td><apex:inputField value="{! Contact.MailingState}" id="State"/></td>
+		      </tr>
+		      <tr>
+			        <td><h3>Zip code:</h3></td>
+			        <td><apex:inputField value="{! Contact.MailingPostalCode}" id="PostalCode"/></td>
+			        <td><h3>County:</h3></td>
+			        <td><apex:inputField value="{! Contact.MailingCountry}" id="Country"/></td>
+			        <td><h3>Phone:</h3></td>
+			        <td><apex:inputField value="{! Contact.Phone}" id="Phone"/></td>
+		      </tr>
+		      <tr><td><br/></td></tr>
+	    </table>
+	
+        <center>
+            <br/>
+            <apex:commandButton action="{!validate}" value="Submit Form" />
+            <apex:pageMessages />
+        </center>        
+	
+	</apex:form>
+	
+</apex:page>
