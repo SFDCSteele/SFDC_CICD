@@ -1,0 +1,22 @@
+<apex:page standardController="Coverage__c"  extensions="CoverageCreation" sidebar="false">
+    
+           <div id="newCoverage" >
+                <apex:form >
+                <apex:pageMessages id="errors" />
+                <apex:pageBlock title="Create Coverage" mode="edit">
+                    <apex:pageBlockSection columns="1">
+                        <apex:inputField value="{! coverage.Coverage__c }"/>
+                        <apex:inputField value="{! coverage.Status__c }"/>
+                    </apex:pageBlockSection>
+            
+                    <apex:pageBlockButtons location="top">
+                        <apex:commandButton action="{! saveCoverage }" value="Save" />        
+                   </apex:pageBlockButtons>
+            
+                    <apex:pageBlock id="hiddenBlock1" rendered="false"></apex:pageBlock>
+            
+                    </apex:pageBlock>
+                </apex:form>
+          </div>
+
+</apex:page>
