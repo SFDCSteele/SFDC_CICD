@@ -343,7 +343,7 @@
 		<target name="git-config" unless="file.found" description="Set the user.name user.email for git">
 			<echo message="Performing git Configuration..."/>	
 			<property environment="serverURL"/>
-			<echo message="100-Passed in environment variable: ${serverURL}..."/>
+			<echo message="101-Passed in environment variable: ${serverURL}..."/>
 			<git-config command="--global">
 				<args>
 					<arg value="user.name" />
