@@ -50,12 +50,12 @@
 
 		<taskdef resource="com/salesforce/antlib.xml" uri="antlib:com.salesforce">
 			<classpath>
-				<pathelement location="src/build/ant-salesforce.jar" />
+				<pathelement location="./src/build/ant-salesforce.jar" />
 			</classpath>
 		</taskdef>
 		<taskdef resource="net/sf/antcontrib/antlib.xml" uri="antlib:net.sf.antcontrib">
 			<classpath>
-				<pathelement location="src/build/ant-contrib-1.0b3.jar"/>
+				<pathelement location="./src/build/ant-contrib-1.0b3.jar"/>
 			</classpath>
 		</taskdef>
 
