@@ -1,4 +1,5 @@
 	<project name="VA usage of Salesforce Ant tasks" default="git-config" basedir="." xmlns:sf="antlib:com.salesforce" xmlns:ac="antlib:net.sf.antcontrib">
+<!--project name="VA usage of Salesforce Ant tasks" default="git-config" basedir="." xmlns:sf="antlib:com.salesforce" xmlns:ac="antlib:net.sf.antcontrib"-->
 
 		<property file="build.properties"/>
 		<property environment="env"/>
@@ -45,6 +46,10 @@
 	         
 			In your build.xml file, you can set pollWaitMillis attribute to increase the time.Like
 			pollWaitMillis="40000"
+/home/rof/src/github.com/SFDCSteele/SFDC_CICD/src/build/ant-salesforce.jar:
+/home/rof/src/github.com/SFDCSteele/SFDC_CICD/src/build/ant-salesforce.jar
+/home/rof/src/github.com/SFDCSteele/SFDC_CICD/src/build/ant-contrib-1.0b3.jar
+/home/rof/src/github.com/SFDCSteele/SFDC_CICD/src/build/ant-contrib-1.0b3.jar
 
 	    -->
 
@@ -55,7 +60,7 @@
 		</taskdef>
 		<taskdef resource="net/sf/antcontrib/antlib.xml" uri="antlib:net.sf.antcontrib">
 			<classpath>
-				<pathelement location="./src/build/ant-contrib-1.0b3.jar"/>
+				<pathelement location="ant-contrib-1.0b3.jar"/>
 			</classpath>
 		</taskdef>
 
