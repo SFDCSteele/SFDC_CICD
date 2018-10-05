@@ -341,8 +341,8 @@
 		<!-- login to  Git and Migration tool targets -->
 		<target name="git-config" unless="file.found" description="Set the user.name user.email for git">
 			<echo message="Performing git Configuration..."/>	
-			<property name="serverURL" value="${serverURL}"/>
-			<echo message="104-Passed in environment variable: ${serverURL}..."/>
+			<property name="serverURL" value="${env.serverURL}"/>
+			<echo message="105-Passed in environment variable: ${serverURL}..."/>
 			<git-config command="--global">
 				<args>
 					<arg value="user.name" />
