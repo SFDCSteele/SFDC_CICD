@@ -557,16 +557,22 @@
 					<ac:math result="env_count" operand1="${env_count}" operation="+" operand2="1" datatype="int" />
 				</sequential>
 			</ac:for>
+			<ac:var name="work.envName" value="${env.envName}"/>
+			<ac:var name="work.serverurl" value="${env.serverURL}"/>
+			<ac:var name="work.username" value="${env.username}"/>
+			<ac:var name="work.password" value="${env.password}"/>
+			<ac:var name="work.unpackaged" value="${env.packageXML}"/>
+			<ac:var name="work.branch" value="${env.branch}"/>
 			<echo message="Environment          : ${work.envName}"/>
 			<echo message="        ServerURL    : ${work.serverurl}" />
 			<echo message="         username    : ${work.username}"/>
 			<echo message="         password:   : ${work.password}"/>
 			<echo message="  deploy location    : ${work.deploy.location}"/>
-			<echo message="deploy check location: ${work.deploy.check.location}"/>
-			<echo message="    repo location    : ${work.repo.location}"/>
+			<!--echo message="deploy check location: ${work.deploy.check.location}"/>
+			<echo message="    repo location    : ${work.repo.location}"/-->
 			<echo message="       unpackaged    : ${work.unpackaged}"/>
 			<echo message="           branch    : ${work.branch}"/>
-			<echo message="APEX Test Classes    : ${work.APEX.testClasses}"/>
+			<!--echo message="APEX Test Classes    : ${work.APEX.testClasses}"/-->
 			<!-- echo message="    packageNames: ${work.packageNames}"/ -->
 			<echo message="================================================="/>
 			<ac:if>
