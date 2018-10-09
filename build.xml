@@ -1354,7 +1354,8 @@
 					<ac:var name="check" value="false"/>
 				</else>
 			</ac:if>
-			<antcall target="git-pull"/>
+			<!--antcall target="git-pull"/-->
+			<property name="work.deploy.location" value="${env.REPO_LOCATION}" />
 			<antcall target="createFullPackage">
 				<param name="check" value="${check}"/>
 			</antcall>
@@ -1366,7 +1367,7 @@
 				<property name="work.serverurl" value="${work.serverurl}" />
 				<property name="work.username" value="${work.username}" />
 				<property name="work.password" value="${work.password}" />
-				<property name="work.deploy.location" value="${sf.deploy.full.location}" />
+				<property name="work.deploy.location" value="${env.REPO_LOCATION}" />
 				<property name="zip.deploy.location" value="${sf.deploy.location}/zip" />
 				<property name="maxPoll" value="${sf.maxPoll}"/>
 				<property name="pollWaitMillis" value="${sf.pollWaitMillis}"/>
@@ -1695,7 +1696,7 @@
 	  	   	<![CDATA[
 	          var File = java.io.File;
 	          var FileWriter = java.io.FileWriter;  	   	
-			  var fullDirectory = project.getProperty( "sf.deploy.full.location" );
+			  var fullDirectory = project.getProperty( "work.deploy.location" );
 			  var release       = project.getProperty( "sf.release_branch" );
 			  var checkBuild    = project.getProperty( "check" );
 	  	   	  var showDebug     = false;
