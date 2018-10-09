@@ -1361,7 +1361,7 @@
 				<param name="check" value="${check}"/>
 			</antcall>
 			<echo message="build.xml VERSION 100.10..............."/>
-			<input message="1-Please verify Package_ALL.xml before proceeding-press return to continue"/>
+			<!-- input message="1-Please verify Package_ALL.xml before proceeding-press return to continue"/ -->
 			<ant antfile="full_build.xml" target="execute-deploy">
 				<property name="check" value="${check}"/>
 				<property name="work.envName" value="${work.envName}" />
