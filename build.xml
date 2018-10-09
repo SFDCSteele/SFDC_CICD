@@ -1355,7 +1355,8 @@
 				</else>
 			</ac:if>
 			<!--antcall target="git-pull"/-->
-			<property name="work.deploy.location" value="${env.REPO_LOCATION}" />
+			<ac:var name="work.deploy.location" value="${env.REPO_LOCATION}" />
+			<echo message="setting work.deploy.location to ${work.deploy.location} from ${env.REPO_LOCATION}"/>
 			<antcall target="createFullPackage">
 				<param name="check" value="${check}"/>
 			</antcall>
