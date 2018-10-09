@@ -1,31 +1,78 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>*</members>
+		<members>ContactSearchController.cls</members>			
+		<members>TestGetInsurancePremium.cls</members>
+		<members>CoverageCreation.cls</members>			
+		<members>TestInsuranceQuoteCreation.cls</members>
+		<members>DriverCreation.cls</members>				
+		<members>TestVehicleCreation.cls</members>
+		<members>DriverSearchController.cls</members>			
+		<members>Test_USPS_Address_Comp_Controller.cls</members>
+		<members>GetInsurancePremium.cls</members>			
+		<members>USPS.cls</members>
+		<members>GetInsurancePremiumMock.cls</members>			
+		<members>USPSAddress.cls</members>
+		<members>InsuranceQuoteCreation.cls</members>			
+		<members>USPSHTTPCallOutTest.cls</members>
+		<members>PopulateInsuranceMaster.cls</members>			
+		<members>USPSHttpCalloutMock.cls</members>
+		<members>Row.cls</members>					
+		<members>USPSTest.cls</members>
+		<members>SampleClass.cls</members>				
+		<members>USPS_Address_Comp_Controller.cls</members>
+		<members>SaveQuoteToDWH.cls</members>				
+		<members>VehicleCreation.cls</members>
+		<members>SaveQuoteToDWHMock.cls</members>			
+		<members>attachmentProcessing.cls</members>
+		<members>TestContactSearchController.cls</members>		
+		<members>displayAndDownload.cls</members>
+		<members>TestCoverageCreation.cls</members>			
+		<members>posAppFormRedirect_Controller.cls</members>
+		<members>TestDriverCreation.cls</members>
         <name>ApexClass</name>
     </types>
     <types>
-        <members>*</members>
+        <members>Slider.component</members>
+        <members>USPS_Address_component.component</members>
         <name>ApexComponent</name>
     </types>
     <types>
-        <members>*</members>
+        <members>ContactSearch.page</members>
+        <members>CoverageForm.page</members>
+        <members>DisplayFiles.page</members>
+        <members>DriverForm.page</members>
+        <members>DriverSearch.page</members>
+        <members>EmployeeReferral.page</members>
+        <members>InsuranceQuoteCreation.page</members>
+        <members>InsuranceQuotesList.page</members>
+        <members>PositionApplicationForm.page</members>
+        <members>USPSTestPage.page</members>
+        <members>VehicleForm.page</members>
         <name>ApexPage</name>
     </types>
     <types>
-        <members>*</members>
+        <members>GetQuotesBasicSuite.testSuite</members>
+        <members>GetQuotesIntegrationSuite.testSuite</members>
+        <members>GetQuotesMasterTestSuite.testSuite</members>
         <name>ApexTestSuite</name>
     </types>
     <types>
-        <members>*</members>
+        <members>CoverageAuditHistory.trigger</members>
+        <members>DriverAuditHistory.trigger</members>
+        <members>InterviewerPickerTrigger.trigger</members>
+        <members>SaveQuoteToDWH.trigger</members>
+        <members>SetContactPIIFields.trigger</members>
+        <members>VehicleAuditHistory.trigger</members>
         <name>ApexTrigger</name>
     </types>
     <types>
-        <members>*</members>
-        <name>AuraDefinitionBundle</name>
-    </types>
-    <types>
-        <members>*</members>
+        <members>FileUploadCSS.resource</members>
+        <members>FileUploadJS.resource</members>
+        <members>flashSlider.resource</members>
+        <members>jquery_fileDownload.resource</members>
+        <members>jQuery_FullCalendar.resource</members>
+        <members>pdfstyles.resource</members>
         <name>StaticResource</name>
     </types>
     <version>38.0</version>
