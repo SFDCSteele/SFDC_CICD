@@ -568,8 +568,8 @@
 			<echo message="         username    : ${work.username}"/>
 			<echo message="         password:   : ${work.password}"/>
 			<echo message="  deploy location    : ${work.deploy.location}"/>
-			<!--echo message="deploy check location: ${work.deploy.check.location}"/>
-			<echo message="    repo location    : ${work.repo.location}"/-->
+			<!--echo message="deploy check location: ${work.deploy.check.location}"/-->
+			<echo message="    repo location    : ${work.repo.location}"/>
 			<echo message="       unpackaged    : ${work.unpackaged}"/>
 			<echo message="           branch    : ${work.branch}"/>
 			<!--echo message="APEX Test Classes    : ${work.APEX.testClasses}"/-->
@@ -1706,7 +1706,7 @@
 			  var fullDirectory = project.getProperty( "work.deploy.location" );
 			  var release       = project.getProperty( "sf.release_branch" );
 			  var checkBuild    = project.getProperty( "check" );
-	  	   	  var showDebug     = false;
+	  	   	  var showDebug     = true;//false;
 		   	  var nameMap = new Array();
 	  	   	  var fileMap = new Array();
 	  	   	  var outFileMap = new Array();
@@ -1714,7 +1714,7 @@
 		   	  var apexClasses = new Array();
 		   	  var entitlements = new Array();
 		   	  var flows = new Array();
-	  	  java.lang.System.out.println("Inside createFullPackage: processing in location: "+fullDirectory+" check: "+checkBuild);
+	  	  java.lang.System.out.println("Inside createFullPackage: processing in location: "+fullDirectory+" check: "+checkBuild+" release branch: "+release);
 	  	   	
 	  	   	  function loadFileName() {
 				fileMap.push({inName:"AccountCriteriaBasedSharingRule",outName:"accountSharingRules",suffix:".*"});
