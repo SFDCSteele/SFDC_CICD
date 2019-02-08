@@ -2,9 +2,9 @@
 cp ./src/build/ant-salesforce.jar ~/.ant/ant/lib/
 cp ./src/build/ant-contrib-1.0b3.jar ~/.ant/ant/lib/
 env
-echo "builder.sh: branch is $CI_BRANCH"
+echo "builder.sh: branch is $BRANCH_NAME"
 #add a while look here to take a list of environments to loop through
-if [ "$CI_BRANCH" = "Staging" ]
+if [ "$BRANCH_NAME" = "Staging" ]
 then
     echo "deploying to staging"
     export envName=$STAGINGEnvName
@@ -12,7 +12,7 @@ then
     export username=$STAGINGUsername
     export password=$STAGINGPassword
     export packageXML=Package_ALL.xml
-elif [[ "$CI_BRANCH" = .UAT-.* ]]
+elif [[ "$BRANCH_NAME" = .UAT-.* ]]
 then
     echo "deploying to UAT"
     export envName=$UATEnvName
@@ -20,7 +20,7 @@ then
     export username=$UATUsername
     export password=$UATPassword
     export packageXML=Package_ALL.xml
-elif [[ "$CI_BRANCH" = .ISITDTC-.* ]]
+elif [[ "$BRANCH_NAME" = .ISITDTC-.* ]]
 then
     echo "deploying to ISITDTC"
     export envName=$ISITDTCEnvName
@@ -38,11 +38,11 @@ else
     #
     if [[ "$CI_BRANCH" =~ .*-ENH-.* ]]
     then
-        export packageXML="Package_$CI_BRANCH.xml"
+        export packageXML="Package_$BRANCH_NAME.xml"
     else
         export packageXML=Package_ALL.xml
     fi
-    export dev_branch=$CI_BRANCH
+    export dev_branch=$BRANCH_NAME
     #
 fi
 #
