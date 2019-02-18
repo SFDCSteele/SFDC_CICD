@@ -3,7 +3,7 @@ ls -al
 which ant
 ls -al /usr/bin/ant
 ls -al /var/lib/jenkins/
-ant --version
+ant -version
 cp ./src/build/ant-salesforce.jar ~/.ant/ant/lib/
 cp ./src/build/ant-contrib-1.0b3.jar ~/.ant/ant/lib/
 env
