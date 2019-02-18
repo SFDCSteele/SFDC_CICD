@@ -72,8 +72,8 @@ echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 if [ "$1" = "FULL" ]
 then
     echo "Deploying the FULL package...."
-    ant -lib ./lib -propertyfile src/build/build.properties -buildfile src/build/build.xml  deploy-full
+    ant -lib ./src/build/ant-salesforce.jar;./src/build/ant-contrib-1.0b3.jar -propertyfile src/build/build.properties -buildfile src/build/build.xml  deploy-full
 else
     echo "Deploying a single package...."
-    ant -lib ./lib -propertyfile src/build/build.properties -buildfile src/build/build.xml deploy
+    ant -lib ./src/build/ant-salesforce.jar;./src/build/ant-contrib-1.0b3.jar -propertyfile src/build/build.properties -buildfile src/build/build.xml deploy
 fi
