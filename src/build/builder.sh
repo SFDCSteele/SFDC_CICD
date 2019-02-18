@@ -3,6 +3,7 @@ cp ./src/build/ant-salesforce.jar ~/.ant/ant/lib/
 cp ./src/build/ant-contrib-1.0b3.jar ~/.ant/ant/lib/
 env
 echo "builder.sh: branch is $BRANCH_NAME"
+ls -al
 #add a while look here to take a list of environments to loop through
 if [ "$BRANCH_NAME" = "Staging" ]
 then
