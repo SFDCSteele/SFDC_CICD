@@ -7,6 +7,7 @@ ant -version
 mkdir lib
 cp ./src/build/ant-salesforce.jar ./lib/
 cp ./src/build/ant-contrib-1.0b3.jar ./lib/
+ls -al ./lib
 env
 echo "builder.sh: branch is $BRANCH_NAME"
 #add a while look here to take a list of environments to loop through
