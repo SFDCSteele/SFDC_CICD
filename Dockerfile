@@ -4,7 +4,7 @@ ADD . /src
 
 WORKDIR /src
 
-RUN ant -f src/build/build.xml -propertyfile src/build/build.properties -lib src/build
+RUN src/build/builder.sh
 
 WORKDIR /src/build
 
