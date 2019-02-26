@@ -1,0 +1,9 @@
+- type: parallel
+  name: example_parallel_step
+  steps:
+    - service: va-salesforce-deploy
+      command: echo "deploy complete!"
+- name: example_tagged_step
+  tag: master
+  service: va-salesforce-deploy
+  command: echo "Deploy here!"

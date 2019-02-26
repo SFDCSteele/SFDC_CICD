@@ -1,0 +1,6 @@
+va-salesforce-deploy:
+  build:
+    image: va-salesforce-deploy
+    dockerfile: Dockerfile
+  environment:
+    EXAMPLE_ENV_VAR: example-var
