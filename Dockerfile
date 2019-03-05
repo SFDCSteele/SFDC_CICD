@@ -4,7 +4,7 @@ ADD . /src
 
 WORKDIR /src
 
-RUN ./src/build/builder.sh
+RUN ls -al ./src/build
 
 WORKDIR /src/build
 
