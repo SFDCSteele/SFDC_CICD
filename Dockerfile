@@ -1,4 +1,4 @@
-FROM va-salesforce-deploy
+FROM openjdk:8
 
 ADD . /src
 
