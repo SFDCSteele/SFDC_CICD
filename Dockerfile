@@ -11,7 +11,6 @@ ADD . /src
 
 WORKDIR /src
 
-RUN which ant
 RUN chmod +x ./src/build/builder.sh
 RUN bash -c "./src/build/builder.sh"
 
