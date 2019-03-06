@@ -1,5 +1,6 @@
 #FROM openjdk:8
-FROM frekele/java:jdk8
+#FROM frekele/java:jdk8
+FROM brandonstevens/ant
 
 #ENV ANT_HOME /usr/local/ant
 #ENV PATH ${PATH}:/usr/local/ant/bin
