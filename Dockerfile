@@ -6,6 +6,7 @@ WORKDIR /src
 
 RUN chmod +x ./src/build/builder.sh
 RUN ls -al ./src/build
+RUN bash -c "./src/build/builder.sh"
 RUN source ./src/build/builder.sh
 
 WORKDIR /src/build
