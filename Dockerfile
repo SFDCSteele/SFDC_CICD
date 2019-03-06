@@ -1,5 +1,11 @@
 FROM openjdk:8
 
+ENV ANT_HOME /usr/local/ant
+ENV PATH ${PATH}:/usr/local/ant/bin
+
+# Added ANT tool from host to docker container
+ADD apache-ant-1.10.1 /usr/local/ant
+
 ADD . /src
 
 WORKDIR /src
