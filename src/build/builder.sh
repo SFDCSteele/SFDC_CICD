@@ -1,7 +1,8 @@
 #!/bin/bash
+ls -al ~/.ant
 cp ./src/build/ant-salesforce.jar ~/.ant/ant/lib/
 cp ./src/build/ant-contrib-1.0b3.jar ~/.ant/ant/lib/
-#env
+env
 echo "builder.sh: branch is $CI_BRANCH---version 000.013"
 #the type of branch will setup type of deployment to perform
 if [ "$CI_BRANCH" = "Staging" ]
@@ -90,7 +91,9 @@ if [ "$deploy_type" = "FULL" ]
 then
     echo "Deploying the FULL package...."
     #ant -propertyfile src/build/build.properties -buildfile src/build/build.xml  deploy-full
+    ant -propertyfile src/build/build.properties -buildfile src/build/build.xml  git-config
 else
     echo "Deploying a single package...."
     #ant -propertyfile src/build/build.properties -buildfile src/build/build.xml deploy
+    ant -propertyfile src/build/build.properties -buildfile src/build/build.xml  git-config
 fi
