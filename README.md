@@ -6,7 +6,7 @@
 
 Welcome to the GitHub repository for the Salesforce CI/CD framework.  This repository contains the following components:
 
-* All Salesforce Metadata for the VA Salesforce instances from June 2018 to current
+* All Salesforce Metadata for the DEVOPS Salesforce instances from June 2018 to current
 * Salesforce Force.com Migration tool Jar and base configuration
 * Ant contributed library for specialized functions
 * Custom build Ant, JavaScript, and Java components to:
