@@ -18,10 +18,6 @@
         <name>ApexClass</name>
     </types>
     <types>
-        <members>CICDBlog</members>
-        <name>ContentAsset</name>
-    </types>
-    <types>
         <members>CICD_Framework</members>
         <name>CustomApplication</name>
     </types>
