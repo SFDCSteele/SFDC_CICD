@@ -1,0 +1,35 @@
+<project name="VA full deploy build.xml"  basedir="." xmlns:sf="antlib:com.salesforce" xmlns:ac="antlib:net.sf.antcontrib">
+
+	<property file="build.properties"/>
+	<property environment="env"/>
+	<property name="work.envName" value="" />
+	<property name="work.serverurl" value="" />
+	<property name="work.username" value="" />
+	<property name="work.password" value="" />
+	<property name="work.deploy.location" value="${sf.deploy.location}" />
+	<property name="work.deploy.check.location" value="${sf.deploy.check.location}" />
+	<property name="work.repo.location" value="${sf.repo.location}" />
+	<property name="work.unpackaged" value="" />
+	<property name="work.branch" value="" />
+	<property name="work.packageNames" value="" />
+
+	<taskdef resource="com/salesforce/antlib.xml" uri="antlib:com.salesforce">
+		<classpath>
+			<pathelement location="/Users/williamsteele/icloud/salesforce/va/vawork/salesforce_ant_41.0/ant-salesforce.jar" />
+		</classpath>
+	</taskdef>
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+		<classpath>
+			<pathelement location="/Users/williamsteele/icloud/salesforce/va/vawork/salesforce_ant_41.0/lib/ant-contrib-1.0b3.jar"/>
+		</classpath>
+	</taskdef>
+
+	<target name="execute-deploy" >
+		<echo message="###################################################################################################"/>
+		<echo message="There are no flows to deploy..." />
+		<echo message="###################################################################################################"/>
+
+	</target>
+
+
+</project>

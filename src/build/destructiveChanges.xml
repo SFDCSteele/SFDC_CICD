@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    
+    <types>
+        <members>TXLoginPolicy_ApprovedOnl</members>
+        <name>TransactionSecurityPolicy</name>
+    </types>
+    <types>
+    	<members>TXLoginPolicy_ApprovedOnly</members>
+    	<members>TXLoginPolicy_ApprovedOnly_TEST</members>
+    	<name>ApexClass</name>
+    </types>
+    
+    <version>46.0</version>
+</Package>

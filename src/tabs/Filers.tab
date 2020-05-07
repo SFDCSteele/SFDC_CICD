@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>User for OGC Ethics filers</description>
+    <frameHeight>600</frameHeight>
+    <hasSidebar>false</hasSidebar>
+    <label>Filers</label>
+    <motif>Custom7: Square</motif>
+    <url>/apex/GBTabs_OGC_Create_Filers</url>
+    <urlEncodingKey>UTF-8</urlEncodingKey>
+</CustomTab>

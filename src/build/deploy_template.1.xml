@@ -1,0 +1,60 @@
+<project name="VA full deploy build.xml"  basedir="." xmlns:sf="antlib:com.salesforce" xmlns:ac="antlib:net.sf.antcontrib">
+
+	<property file="build.properties"/>
+	<property environment="env"/>
+	<property name="work.envName" value="" />
+	<property name="work.serverurl" value="" />
+	<property name="work.username" value="" />
+	<property name="work.password" value="" />
+	<property name="work.deploy.location" value="${sf.deploy.location}" />
+	<property name="work.deploy.check.location" value="${sf.deploy.check.location}" />
+	<property name="work.repo.location" value="${sf.repo.location}" />
+	<property name="work.unpackaged" value="" />
+	<property name="work.branch" value="" />
+	<property name="work.packageNames" value="" />
+
+	<taskdef resource="com/salesforce/antlib.xml" uri="antlib:com.salesforce">
+		<classpath>
+			<pathelement location="/Users/williamsteele/icloud/salesforce/va/vawork/salesforce_ant_41.0/ant-salesforce.jar" />
+		</classpath>
+	</taskdef>
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+		<classpath>
+			<pathelement location="/Users/williamsteele/icloud/salesforce/va/vawork/salesforce_ant_41.0/lib/ant-contrib-1.0b3.jar"/>
+		</classpath>
+	</taskdef>
+
+	<target name="execute-deploy" >
+		<echo message="###################################################################################################"/>
+		<echo message="Performing a Full deploy (Check=${check}) of ${work.repo.location}/src to ${work.serverurl}..." />
+		<echo message="###################################################################################################"/>
+		<echo message="Performing copy of ${work.unpackaged} from ${work.repo.location}/src/build/Releases/${work.release_branch}/${work.unpackaged} to ./src"/>
+		<copy file="${work.repo.location}/src/build/Releases/${work.release_branch}/${work.unpackaged}"
+			tofile="${work.repo.location}/src/package.xml" overwrite="true" failonerror="true"/>
+		<echo message="###################################################################################################"/>
+		<delete file="${zip.deploy.location}/full_deploy.zip"/>
+
+		<zip destfile="${zip.deploy.location}/full_deploy.zip">
+	        <zipfileset dir="${work.repo.location}/src">
+<!-- INSERT FILES HERE -->
+				<include name="package.xml"/>
+	        </zipfileset>
+	    </zip>
+		<sf:deploy
+			username="${work.username}"
+			password="${work.password}"
+			serverurl="${work.serverurl}"
+			maxPoll="${sf.maxPoll}"
+			pollWaitMillis="${sf.pollWaitMillis}"
+			singlePackage="true"
+			ignoreWarnings="true"
+			zipFile="${zip.deploy.location}/full_deploy.zip"
+			allowMissingFiles="true"	
+			rollbackOnError="true"
+<!-- INSERT CLASSES HERE -->
+		</sf:deploy>
+
+	</target>
+
+
+</project>

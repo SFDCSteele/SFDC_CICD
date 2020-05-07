@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <flexiPageRegions>
+        <componentInstances>
+            <componentInstanceProperties>
+                <name>fileType</name>
+                <value>Events</value>
+            </componentInstanceProperties>
+            <componentInstanceProperties>
+                <name>hostAppType</name>
+                <value>Technician</value>
+            </componentInstanceProperties>
+            <componentName>VALERI_File_Upload</componentName>
+            <visibilityRule>
+                <booleanFilter>1 OR 2</booleanFilter>
+                <criteria>
+                    <leftValue>{!$User.Valeri_User_Role__c}</leftValue>
+                    <operator>EQUAL</operator>
+                    <rightValue>Loan Administration Officer (LAO)</rightValue>
+                </criteria>
+                <criteria>
+                    <leftValue>{!$User.Valeri_User_Role__c}</leftValue>
+                    <operator>EQUAL</operator>
+                    <rightValue>Servicing Officer (SO)</rightValue>
+                </criteria>
+            </visibilityRule>
+        </componentInstances>
+        <name>main</name>
+        <type>Region</type>
+    </flexiPageRegions>
+    <masterLabel>VALERI Report Event(s)</masterLabel>
+    <template>
+        <name>flexipage:defaultAppHomeTemplate</name>
+    </template>
+    <type>AppPage</type>
+</FlexiPage>

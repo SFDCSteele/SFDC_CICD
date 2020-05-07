@@ -1,0 +1,6 @@
+echo "comment $1 -- branch: $2 -- merging to $3"
+git add .
+git commit -m "$1"
+git push origin $2
+#git merge $3
+#git push

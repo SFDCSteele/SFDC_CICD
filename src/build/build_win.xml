@@ -1,0 +1,2444 @@
+<project name="VA usage of Salesforce Ant tasks" default="git-config" basedir="." xmlns:sf="antlib:com.salesforce" xmlns:ac="antlib:net.sf.antcontrib">
+
+		<property file="build.properties"/>
+		<property environment="env"/>
+		<property name="zipParms" value="" />
+		<property name="buildXMLVersion" value="101.13" />
+		<property name="apiVersion" value="45.0" />
+
+		<property name="passed.envName" value="" />
+		<property name="work.envName" value="" />
+		<property name="work.serverurl" value="" />
+		<property name="work.username" value="" />
+		<property name="work.password" value="" />
+		<property name="work.deploy.full.location" value="${sf.deploy.full.location}" />
+		<property name="work.repo.full.location" value="${sf.repo.full.location}" />
+		<property name="work.deploy.location" value="${sf.deploy.location}" />
+		<property name="work.deploy.check.location" value="${sf.deploy.check.location}" />
+		<property name="work.repo.location" value="${sf.repo.location}" />
+		<property name="work.unpackaged" value="" />
+		<property name="work.release_branch" value=""/>
+		<property name="work.deploy.location" value=""/>
+		<property name="work.packageNames" value="" />
+		<property name="work.APEX.testClasses" value="" />
+		<property name="check.APEX.testClasses" value="" />
+
+		<property name="temp.work.nameMap" value="" />
+		<ac:var name="work.nameMap" value="" />
+		
+		<property name="from.envName" value="" />
+		<property name="from.serverurl" value="" />
+		<property name="from.username" value="" />
+		<property name="from.password" value="" />
+		<property name="from.unpackaged" value="" />
+		<property name="from.packageNames" value="" />
+		<property name="from.APEX.testClasses" value="" />
+
+		<property name="to.work.env" value="" />
+		<property name="to.envName" value="" />
+		<property name="to.serverurl" value="" />
+		<property name="to.username" value="" />
+		<property name="to.password" value="" />
+		<property name="to.unpackaged" value="" />
+		<property name="to.packageNames" value="" />
+		<property name="to.APEX.testClasses" value="" />
+
+		<!-- Setting default value for username, password and session id properties to empty string 
+	         so unset values are treated as empty. Without this, ant expressions such as ${sf.username}
+	         will be treated literally.
+	         
+			In your build.xml file, you can set pollWaitMillis attribute to increase the time.Like
+			pollWaitMillis="40000"
+
+	    -->
+
+		<taskdef resource="com/salesforce/antlib.xml" uri="antlib:com.salesforce">
+			<classpath>
+				<pathelement location="/Users/wsteele/vawork/apache-ant-1.10.1/bin/lib/ant-salesforce.jar" />
+			</classpath>
+		</taskdef>
+		<taskdef resource="net/sf/antcontrib/antlib.xml">
+			<classpath>
+				<pathelement location="/Users/wsteele/vawork/apache-ant-1.10.1/bin/lib/ant-contrib-1.0b3.jar"/>
+			</classpath>
+		</taskdef>
+
+		<macrodef name = "git-config">
+			<attribute name = "command" />
+			<attribute name="options" default="" />
+			<attribute name="failerror" default="false" />
+			<element name = "args" optional = "true" />
+			<sequential>
+				<echo message="git @{command} @{options}" />
+				<exec executable="git" failonerror="@{failerror}">
+					<arg line="config @{command} @{options}" />
+					<args />
+				</exec>
+			</sequential>
+		</macrodef>
+		<macrodef name = "git">
+			<attribute name = "command" />
+			<attribute name="options" default="" />
+			<attribute name="dir" default="" />
+			<attribute name="failerror" default="false" />
+			<element name = "args" optional = "true" />
+			<sequential>
+				<echo message="git dir @{dir}" />
+				<echo message="git @{command}" />
+				<echo message="git @{options}" />
+				<exec executable="git" dir="@{dir}" failonerror="@{failerror}">
+					<arg line="@{command} @{options}" />
+					<args />
+				</exec>
+			</sequential>
+		</macrodef>
+		<macrodef name = "git-clone-pull">
+			<attribute name = "repository" />
+			<attribute name = "dest" />
+			<sequential>
+				<echo message = "inside the git-clone-pull command...args: @{dir}" />
+				<git command = "clone">
+					<args>
+						<arg value = "@{repository}" />
+						<arg value = "@{dest}" />
+					</args>
+				</git>
+				<git command = "pull" dir = "@{dest}" />
+			</sequential>
+		</macrodef>
+		<!-- Get folders content -->
+		<macrodef name="Package_fetchFolderContents">
+			<attribute name="folderName"/>
+			<attribute name="componentType"/>
+			<attribute name="orgName"/>
+			<attribute name="sfUserName"/>
+			<attribute name="sfPassword"/>
+			<attribute name="sfServerURL"/>
+
+			<sequential>
+				<echo message="Step 3.1. Get MetaData @{componentType} for folder @{folderName} placing into ${work.deploy.location}/tmp/@{orgName}-@{componentType}-@{folderName}.log..."/>
+				<sf:listMetadata
+	                    username="@{sfUserName}"
+	                    password="@{sfPassword}" 
+	                    serverurl="@{sfServerURL}"
+	                    metadataType="@{componentType}" 
+	                    folder="@{folderName}"
+	                    resultFilePath="${basedir}\..\..\..\deploy\tmp\@{orgName}-@{componentType}-@{folderName}.log"/>
+
+				<if>
+					<!-- Execute only if file created -->
+					<available file="${basedir}\..\..\..\deploy\tmp\@{orgName}-@{componentType}-@{folderName}.log"/>
+					<then>
+						<loadfile srcfile="${basedir}\..\..\..\deploy\tmp\@{orgName}-@{componentType}-@{folderName}.log" property="@{orgName}.@{componentType}.@{folderName}" >
+							<filterchain>
+								<ignoreblank/>
+								<trim/>
+								<linecontains>
+									<contains value="FileName:"/>
+								</linecontains>
+
+								<prefixlines prefix="&lt;members&gt;"/>
+								<suffixlines suffix="&lt;/members&gt;"/>
+
+								<tokenfilter>
+									<replacestring from="FileName: reports/" to=""/>
+									<replacestring from="FileName: documents/" to=""/>
+									<replacestring from="FileName: email/" to=""/>
+									<replacestring from="FileName: dashboards/" to=""/>
+									<replacestring from="FileName: unfiled$public" to="unfiled$public"/>
+									<replacestring from=".report" to=""/>
+									<replacestring from=".email" to=""/>
+									<replacestring from=".dashboard" to=""/>
+								</tokenfilter>
+							</filterchain>
+						</loadfile>
+
+						<!-- Write filtered content to snippet file -->
+						<for param="line" list="${@{orgName}.@{componentType}.@{folderName}}" delimiter="${line.separator}">
+							<sequential>
+								<concat destfile="${basedir}\..\..\..\deploy\tmp\@{orgName}.Package.xml.Snnipet.@{componentType}" append="true" >${tab}${tab}@{line}${line.separator}</concat>
+							</sequential>
+						</for>
+						<!-- <echo> Extracted Report Names - ${@{orgName}.@{componentType}.@{folderName}} </echo> -->
+					</then>
+				</if>
+			</sequential>
+		</macrodef>
+
+		<!-- Get the folder name -->
+		<macrodef name="Package_computeFolderName">
+			<attribute name="sfUserName"/>
+			<attribute name="sfPassword"/>
+			<attribute name="sfServerURL"/>
+			<attribute name="metadataType"/>
+			<attribute name="tmpFolderPath"/>
+			<attribute name="componentType"/>
+			<attribute name="orgName"/>
+
+			<sequential>
+				<echo message="Step 2.1. Get MetaData @{metadataType}  placing into @{tmpFolderPath}..."/>
+				<sf:listMetadata
+	                    username="@{sfUserName}"
+	                    password="@{sfPassword}" 
+	                    serverurl="@{sfServerURL}"
+	                    metadataType="@{metadataType}" 
+	                    resultFilePath="@{tmpFolderPath}"/>
+
+				<echo>Output file for sf:listMetadata - @{tmpFolderPath}</echo>
+
+				<loadfile srcfile="@{tmpFolderPath}" property="@{orgName}.@{metadataType}.onlyFolderName" >
+					<filterchain>
+						<trim/>
+						<ignoreblank/>
+						<linecontains negate="false">
+							<contains value="FileName"/>
+						</linecontains>
+						<tokenfilter>
+							<replacestring from="FileName: reports/" to=""/>
+							<replacestring from="FileName: documents/" to=""/>
+							<replacestring from="FileName: email/" to=""/>
+							<replacestring from="FileName: dashboards/" to=""/>
+							<replacestring from="FileName: unfiled$public" to="unfiled$public"/>
+							<replacestring from=" " to=""/>
+						</tokenfilter>
+					</filterchain>
+				</loadfile>
+
+				<for param="line" list="${@{orgName}.@{metadataType}.onlyFolderName}" delimiter="${line.separator}">
+					<sequential>
+						<echo message="Folder - @{line}"/>
+
+						<concat destfile="${basedir}\..\..\..\deploy\tmp\@{orgName}.Package.xml.Snnipet.@{componentType}" append="true">${tab}${tab}&lt;members&gt;@{line}&lt;/members&gt;${line.separator}</concat>
+
+						<Package_fetchFolderContents 
+	                    folderName="@{line}" 
+	                    componentType="@{componentType}" 
+	                    orgName="@{orgName}" 
+	                    sfusername="@{sfUserName}"
+	                    sfPassword="@{sfPassword}" 
+	                    sfServerURL="@{sfServerURL}" />
+
+					</sequential>
+				</for>
+			</sequential>
+		</macrodef>
+
+		<macrodef name="GeneratePackage_xml">
+			<attribute name="sfUserName"/>
+			<attribute name="sfPassword"/>
+			<attribute name="sfServerURL"/>
+			<!-- This attribute decides where to copy Package.xml -->
+			<attribute name="packageXMLPath"/>
+			<attribute name="packageXMLTemplate"/>
+			<attribute name="orgName"/>
+
+			<sequential>
+				<echo message="Step 1. Creating files in packageXMLPath: @{packageXMLPath} ---baseDir ${work.deploy.location}/tmp/@{orgName}..."/>
+
+				<!-- Delete All files first else it will append to existing old file -->
+				<delete file="${work.deploy.location}\tmp\@{orgName}.Package.xml.Snnipet.Dashboard"/>
+				<delete file="${work.deploy.location}\tmp\@{orgName}.Package.xml.Snnipet.Report"/>
+				<delete file="${work.deploy.location}\tmp\@{orgName}.Package.xml.Snnipet.EmailTemplate"/>
+				<delete file="${work.deploy.location}\tmp\@{orgName}.Package.xml.Snnipet.Document"/>
+
+				<!-- Create Fresh Files -->
+				<touch file="${work.deploy.location}\tmp\@{orgName}.Package.xml.Snnipet.Dashboard"/>
+				<touch file="${work.deploy.location}\tmp\@{orgName}.Package.xml.Snnipet.Report"/>
+				<touch file="${work.deploy.location}\tmp\@{orgName}.Package.xml.Snnipet.EmailTemplate"/>
+				<touch file="${work.deploy.location}\tmp\@{orgName}.Package.xml.Snnipet.Document"/>
+
+				<!-- Empty Content in each file -->
+				<property name="blankVal" value=""/>
+				<concat destfile="${work.deploy.location}\tmp\@{orgName}.Package.xml.Snnipet.Dashboard" append="true">${blankVal}</concat>
+				<concat destfile="${work.deploy.location}\tmp\@{orgName}.Package.xml.Snnipet.Report" append="true">${blankVal}</concat>
+				<concat destfile="${work.deploy.location}\tmp\@{orgName}.Package.xml.Snnipet.EmailTemplate" append="true">${blankVal}</concat>
+				<concat destfile="${work.deploy.location}\tmp\@{orgName}.Package.xml.Snnipet.Document" append="true">${blankVal}</concat>
+
+
+				<!-- 
+	                Imp Step :
+	                1. We must assign Password to property and then pass to other Macro else it will ignore
+	                   all occurrences of '$' in password
+	                2. Property Name must be unique so safer to add Org Name also
+	            -->
+				<property name="sfPassword.prop.@{orgName}" value="@{sfPassword}"/>
+
+				<echo message="Step 2. Get folder name: tmpFolderPath for folder path: ${work.deploy.location}\tmp\@{orgName}.DashboardFolders.log..."/>
+				<Package_computeFolderName 
+	                sfUserName="@{sfUserName}"
+	                sfPassword="$${sfPassword.prop.@{orgName}}" 
+	                sfServerURL="@{sfServerURL}"
+	                metadataType="DashboardFolder"
+	                componentType = "Dashboard"                
+	                tmpFolderPath = "${basedir}\..\..\..\deploy\tmp\@{orgName}.DashboardFolders.log" 
+	                orgName="@{orgName}" 
+	            />
+				<!--
+	               tmpFolderPath = ".\tmp\@{orgName}.DashboardFolders.log" 
+	            -->
+				<Package_computeFolderName 
+	                sfUserName="@{sfUserName}"
+	                sfPassword="$${sfPassword.prop.@{orgName}}" 
+	                sfServerURL="@{sfServerURL}"
+	                metadataType="ReportFolder"  
+	                componentType="Report"
+	                tmpFolderPath = "${basedir}\..\..\..\deploy\tmp\@{orgName}.ReportFolders.log" 
+	                orgName="@{orgName}" 
+	            />
+
+				<Package_computeFolderName 
+	                sfUserName="@{sfUserName}"
+	                sfPassword="$${sfPassword.prop.@{orgName}}" 
+	                sfServerURL="@{sfServerURL}"
+	                metadataType="EmailFolder" 
+	                componentType="EmailTemplate"
+	                tmpFolderPath = "${basedir}\..\..\..\deploy\tmp\@{orgName}.EmailFolders.log" 
+	                orgName="@{orgName}" 
+	            />
+
+				<Package_computeFolderName 
+	                sfUserName="@{sfUserName}"
+	                sfPassword="$${sfPassword.prop.@{orgName}}" 
+	                sfServerURL="@{sfServerURL}"
+	                metadataType="DocumentFolder" 
+	                componentType = "Document" 
+	                tmpFolderPath = "${basedir}\..\..\..\deploy\tmp\@{orgName}.DocumentFolders.log" 
+	                orgName="@{orgName}" 
+	            />
+
+
+				<!-- Load Generated File content which has Snippet of Package.xml in Property -->
+				<loadfile property="@{orgName}.DashboardFolder.log.edit" srcFile="${basedir}\..\..\..\deploy\tmp\@{orgName}.Package.xml.Snnipet.Dashboard" failonerror="false"/>
+				<loadfile property="@{orgName}.ReportFolder.log.edit" srcFile="${basedir}\..\..\..\deploy\tmp\@{orgName}.Package.xml.Snnipet.Report" failonerror="false"/>
+				<loadfile property="@{orgName}.EmailFolder.log.edit" srcFile="${basedir}\..\..\..\deploy\tmp\@{orgName}.Package.xml.Snnipet.EmailTemplate" failonerror="false"/>
+				<loadfile property="@{orgName}.DocumentFolder.log.edit" srcFile="${basedir}\..\..\..\deploy\tmp\@{orgName}.Package.xml.Snnipet.Document" failonerror="false"/>
+				<echo message="load file property @{orgName}.DashboardFolder.log.edit --> @{orgName}.DashboardFolder.log.edit"/>
+				<echo message="srcFile ${basedir}\..\..\..\deploy\tmp\@{orgName}.Package.xml.Snnipet.Dashboard"/>
+
+				<copy file="@{packageXMLTemplate}" tofile="@{packageXMLPath}" overwrite="true" failonerror="true"/>
+				<replace file="@{packageXMLPath}">
+					<replacefilter token="_replaceReportMembersTag_" value="${@{orgName}.ReportFolder.log.edit}"/>
+					<replacefilter token="_replaceEmailTemplateMembersTag_" value="${@{orgName}.EmailFolder.log.edit}"/>
+					<replacefilter token="_replaceDashboardMembersTag_" value="${@{orgName}.DashboardFolder.log.edit}"/>
+					<replacefilter token="_replaceDocumentMembersTag_" value="${@{orgName}.DocumentFolder.log.edit}"/>
+				</replace>
+				<echo message="99.PROCESS COMPLETE..."/>
+
+			</sequential>
+		</macrodef>
+
+
+		<!-- Use this proxy when in Proxy required network -->
+		<target name="proxy">
+			<setproxy proxyhost="${proxy.host}" proxyport="${proxy.port}"  />
+		</target>
+
+		<!-- Use this empty proxy setting outside Proxy Required network -->
+		<target name="noproxy">
+		</target>
+
+		<!-- ===================================================================================================================================================== -->
+		<!-- Setup related targets -->
+
+
+		<!-- login to  Git and Migration tool targets -->
+		<target name="git-config" depends="setEnv" unless="file.found" description="Set the user.name user.email for git">
+			<echo message="Performing git Configuration..."/>
+			<git-config command="--global">
+				<args>
+					<arg value="user.name" />
+					<arg value="${sf.gitusername}" />
+				</args>
+			</git-config>
+			<git-config command="--global">
+				<args>
+					<arg value="user.email" />
+					<arg value="${sf.gituseremail}" />
+				</args>
+			</git-config>
+			<git command="remote">
+				<args>
+					<arg value="remove"/>
+					<arg value="origin"/>
+				</args>
+			</git>
+			<git command="remote">
+				<args>
+					<arg value="add"/>
+					<arg value="origin"/>
+					<arg value="${sf.repository}"/>
+				</args>
+			</git>
+			<git-config command="--global">
+				<args>
+					<arg value="--list" />
+				</args>
+			</git-config>
+			<git command="remote">
+				<args>
+					<arg value="-v"/>
+				</args>
+			</git>
+			<git command="status" />
+		</target>
+
+		<target name="setEnv">
+			<ac:if>
+				<isset property="envName"/>
+				<then>
+				<ac:var name="env_count" value="1"/>
+				<ac:var name="passed.envName" value="${envName}"/>
+				<ac:if>
+					<isset property="toEnvName"/>
+					<then>
+						<ac:var name="to.work.env" value="${toEnvName}"/>
+					</then>
+				</ac:if>
+				<ac:for list="${passed.envName}" param="passed.env.name">
+					<sequential>
+						<ac:var name="env_index" value="0"/>
+						<ac:var name="loop_index" value="1"/>
+						<ac:for list="${sf.envName}" param="env.name">
+							<sequential>
+								<ac:if>
+									<equals arg1="@{env.name}" arg2="@{passed.env.name}"/>
+									<then>
+										<ac:var name="env_index" value="${loop_index}"/>
+										<ac:if>
+											<equals arg1="${env_count}" arg2="1"/>
+											<then>
+												<ac:var name="work.envName" value="@{env.name}"/>
+												<ac:var name="from.envName" value="@{env.name}"/>
+											</then>
+											<else>
+												<ac:var name="to.envName" value="@{env.name}"/>
+											</else>
+										</ac:if>
+									</then>
+								</ac:if>
+								<ac:math result="loop_index" operand1="${loop_index}" operation="+" operand2="1" datatype="int" />	
+							</sequential>
+						</ac:for>
+						<ac:if>
+							<not>
+								<equals arg1="${env_index}" arg2="0"/>
+							</not>
+							<then>
+								<ac:var name="loop_index" value="1"/>
+								<ac:for list="${sf.serverurl}" param="server.url">
+									<sequential>
+										<ac:if>
+											<equals arg1="${env_index}" arg2="${loop_index}"/>
+											<then>
+												<ac:if>
+													<equals arg1="${env_count}" arg2="1"/>
+													<then>
+														<ac:var name="work.serverurl" value="@{server.url}"/>
+														<ac:var name="from.serverurl" value="@{server.url}"/>
+													</then>
+													<else>
+														<ac:var name="to.serverurl" value="@{server.url}"/>
+													</else>
+												</ac:if>
+											</then>
+										</ac:if>
+										<ac:math result="loop_index" operand1="${loop_index}" operation="+" operand2="1" datatype="int" />
+									</sequential>
+								</ac:for>
+								<ac:var name="loop_index" value="1"/>
+								<ac:for list="${sf.username}" param="user.name">
+									<sequential>
+										<ac:if>
+											<equals arg1="${env_index}" arg2="${loop_index}"/>
+											<then>
+												<ac:if>
+													<equals arg1="${env_count}" arg2="1"/>
+													<then>
+														<ac:var name="work.username" value="@{user.name}"/>
+														<ac:var name="from.username" value="@{user.name}"/>
+													</then>
+													<else>
+														<ac:var name="to.username" value="@{user.name}"/>
+													</else>
+												</ac:if>
+											</then>
+										</ac:if>
+										<ac:math result="loop_index" operand1="${loop_index}" operation="+" operand2="1" datatype="int" />
+									</sequential>
+								</ac:for>
+								<ac:var name="loop_index" value="1"/>
+								<ac:for list="${sf.password}" param="password">
+									<sequential>
+										<ac:if>
+											<equals arg1="${env_index}" arg2="${loop_index}"/>
+											<then>
+												<ac:if>
+													<equals arg1="${env_count}" arg2="1"/>
+													<then>
+														<ac:var name="work.password" value="@{password}"/>
+														<ac:var name="from.password" value="@{password}"/>
+													</then>
+													<else>
+														<ac:var name="to.password" value="@{password}"/>
+													</else>
+												</ac:if>
+											</then>
+										</ac:if>
+										<ac:math result="loop_index" operand1="${loop_index}" operation="+" operand2="1" datatype="int" />
+									</sequential>
+								</ac:for>
+								<ac:var name="loop_index" value="1"/>
+								<ac:for list="${sf.unpackaged}" param="unpackaged">
+									<sequential>
+										<ac:if>
+											<equals arg1="${env_index}" arg2="${loop_index}"/>
+											<then>
+												<ac:if>
+													<isset property="packageName"/>
+													<then>
+														<ac:var name="work.unpackaged" value="${packageName}"/>
+													</then>
+													<else>
+														<ac:var name="work.unpackaged" value="@{unpackaged}"/>
+													</else>
+												</ac:if>
+											</then>
+										</ac:if>
+										<ac:math result="loop_index" operand1="${loop_index}" operation="+" operand2="1" datatype="int" />
+									</sequential>
+								</ac:for>
+								<ac:var name="loop_index" value="1"/>
+								<ac:for list="${sf.APEX.testClasses}" param="apexTestCases">
+									<sequential>
+										<ac:if>
+											<equals arg1="${env_index}" arg2="${loop_index}"/>
+											<then>
+												<ac:var name="check.APEX.testClasses" value="@{apexTestCases}"/>
+												<ac:var name="work.APEX.testClasses" value="@{apexTestCases}"/>
+											</then>
+										</ac:if>
+										<ac:math result="loop_index" operand1="${loop_index}" operation="+" operand2="1" datatype="int" />
+									</sequential>
+								</ac:for>
+								<ac:var name="loop_index" value="1"/>
+								<ac:for list="${sf.branch}" param="branch">
+									<sequential>
+										<ac:if>
+											<equals arg1="${env_index}" arg2="${loop_index}"/>
+											<then>
+												<ac:var name="work.branch" value="@{branch}"/>
+											</then>
+										</ac:if>
+										<ac:math result="loop_index" operand1="${loop_index}" operation="+" operand2="1" datatype="int" />
+									</sequential>
+								</ac:for>				
+							</then>
+						</ac:if>
+						<ac:math result="env_count" operand1="${env_count}" operation="+" operand2="1" datatype="int" />
+					</sequential>
+				</ac:for>
+				</then>
+				<else>
+					<ac:var name="work.envName" value="${env.envName}"/>
+					<ac:var name="work.serverurl" value="${env.serverURL}"/>
+					<ac:var name="work.username" value="${env.USERNAME}"/>
+					<ac:var name="work.password" value="${env.password}"/>
+					<ac:var name="work.unpackaged" value="${env.packageXML}"/>
+					<ac:var name="work.branch" value="${env.dev_branch}"/>
+					<ac:var name="work.release_branch" value="${env.release_branch}"/>
+					<ac:var name="work.deploy.location" value="${env.deployLocation}"/>
+					<ac:var name="work.repo.location" value="${env.repoLocation}"/>
+					<ac:var name="work.deploy.full.location" value="${env.deployFullLocation}"/>
+					<ac:var name="work.repo.full.location" value="${env.repoFullLocation}"/>
+					<ac:var name="env_count" value="2"/>
+				</else>
+			</ac:if>
+			<echo message="build.xml VERSION ${buildXMLVersion}..............."/>
+			<echo message="Environment          : ${work.envName}"/>
+			<echo message="        ServerURL    : ${work.serverurl}" />
+			<echo message="         username    : ${work.username}"/>
+			<echo message="         password:   : ${work.password}"/>
+			<echo message="deploy full location  : ${work.deploy.full.location}"/>
+			<echo message="   deploy location    : ${work.deploy.location}"/>
+			<echo message="deploy check location : ${work.deploy.check.location}"/>
+			<echo message="repo full location    : ${work.repo.full.location}"/>
+			<echo message="     repo location    : ${work.repo.location}"/>
+			<echo message="        unpackaged    : ${work.unpackaged}"/>
+			<echo message="            branch    : ${work.branch}"/>
+			<echo message="    release branch    : ${work.release_branch}"/>
+			<!-- echo message="APEX Test Classes    : ${work.APEX.testClasses}"/>
+			<echo message="    packageNames: ${work.packageNames}"/ -->
+			<echo message="================================================="/>
+			<ac:if>
+				<not>
+					<equals arg1="${env_count}" arg2="2"/>
+				</not>
+				<then>
+					<echo message="To Environment   : ${to.envName}"/>
+					<echo message="        ServerURL: ${to.serverurl}" />
+					<echo message="         username: ${to.username}"/>
+					<echo message="  deploy location: ${work.deploy.location}"/>
+					<echo message="    repo location: ${work.repo.location}"/>
+					<echo message="       unpackaged: ${work.unpackaged}"/>
+					<echo message="APEX Test Classes: ${work.APEX.testClasses}"/>
+					<echo message="================================================="/>
+				</then>
+			</ac:if>
+			
+		</target>
+
+		<target name="clean">
+			<ac:if>
+				<isset property="clean"/>
+				<then>
+					<echo message="Performing clean on ${work.deploy.location}...."/>
+					<delete includeEmptyDirs="true" verbose="true" failonerror="false">
+						<fileset dir="${work.deploy.location}">
+							<include name="**" />
+							<include name="**\*.*" />
+						</fileset>
+					</delete>
+				</then>	
+			</ac:if>
+		</target>
+
+		<!-- ===================================================================================================================================================== -->
+		<!-- Salesforce extract/deploy related targets -->
+
+		<target name="retrieveNamedPackage" depends="setEnv">
+			<echo message="---------------------------"/>
+			<echo message="Version ${buildXMLVersion} (API Version: ${apiVersion})"/>
+			<echo message="Inside retrieveNamedPackage"/>
+			<echo message="---------------------------"/>
+			<ac:if>
+				<isset property="changeset"/>
+				<then>
+					<ac:var name="work.changesetname" value="${changeset}"/>
+					<echo message="Using passed in changeset ${work.changesetname}...."/>
+				</then>	
+				<else>
+					<input message="Change Set Name" addproperty="work.changesetname" />
+				</else>
+			</ac:if>
+			<ac:if>
+				<isset property="package"/>
+				<then>
+					<ac:var name="work.packagename" value="${package}"/>
+					<echo message="Using passed in package ${work.packagename}...."/>
+				</then>	
+				<else>
+					<input message="Output Package name" addproperty="work.packagename" />
+				</else>
+			</ac:if>
+
+			<echo message="Retrieving package ${work.changesetname} saving to ${work.packagename}...in location ${work.deploy.location}/src"/>
+			<mkdir dir="${work.deploy.location}" />
+			<mkdir dir="${work.deploy.location}/src" />
+			<sf:retrieve
+				username="${work.username}" 
+				password="${work.password}" 
+				serverurl="${work.serverurl}" 
+				retrieveTarget="${work.deploy.location}/src" 
+				singlePackage="false"
+				apiVersion="${apiVersion}"
+				packageNames="${work.changesetname}" />
+			<!--move todir="${work.deploy.location}/src">
+			  <fileset dir="${work.deploy.location}/src/${work.changesetname}">
+			    <include name="**/*.*"/>
+			    <include name="*.*"/>
+			  </fileset>
+			</move>
+			<delete includeEmptyDirs="true" verbose="true">
+				<fileset dir="${work.deploy.location}/src">
+					<include name="./${work.changesetname}/*.*" />
+					<include name="./${work.changesetname}/**/*.*" />
+				</fileset>
+			</delete-->
+			<echo message="Copying ${work.deploy.location}\src\${work.changesetname}\package.xml to ${work.packagename}"/>
+			<copy file="${work.deploy.location}\src\${work.changesetname}\package.xml"
+				tofile="${work.repo.location}\src\build\Releases\${work.release_branch}\${work.packagename}" overwrite="true" failonerror="true"/>
+			<ac:if>
+				<isset property="copy"/>
+				<then>
+					<echo message="Performing copy from ${work.deploy.location}\src to ${work.repo.location}\src"/>
+					<copy todir="${work.repo.location}\src">
+					  <fileset dir="${work.deploy.location}\src"/>
+					</copy>
+				</then>
+			</ac:if>
+		</target>
+
+		<!-- Git and Migration tool targets -->
+		<target name="build-PackageXML" depends="noproxy,setEnv">
+			<!-- Change to proxy if do not want to use proxy -->
+			<!-- Create tmp folder if missing -->
+			<mkdir dir="${work.deploy.location}\tmp"/>
+			<GeneratePackage_xml
+	            sfUserName = "${work.username}" 
+	            sfPassword = "${work.password}"
+	            sfServerURL = "${work.serverurl}"
+	            packageXMLPath = "${work.deploy.location}\tmp\Package.xml" 
+	        	packageXMLTemplate = "${sf.packageXMLTemplate}" 
+	           	orgName="${work.envName}"  />
+
+			<echo message="Copying ${work.deploy.location}\tmp\Package.xml to ${work.repo.location}\src\build\Releases\${work.release_branch}\${work.unpackaged}..." />
+			<copy file="${work.deploy.location}\tmp\Package.xml"
+				tofile="${work.repo.location}\src\build\Releases\${work.release_branch}\${work.unpackaged}" overwrite="true" failonerror="true"/>
+			
+
+		</target>
+
+		<target name="extract" description="Extract all configuration from the org based on package.xml to local repository">
+			<ac:if>
+				<isset property="envName"/>
+				<then>
+					<ac:var name="passed.envName" value="${envName}"/>
+					<ac:for list="${envName}" param="env.name">
+						<sequential>
+							<echo message="========================================="/>
+							<echo message="Processing environment: @{env.name} (1)"/>
+							<ac:var name="work.envName" value="@{env.name}"/>
+							<antcall target="extract-step">
+								<param name="envName" value="@{env.name}"/>
+							</antcall>
+						</sequential>
+					</ac:for>
+				</then>
+				<else>
+					<echo message="========================================="/>
+					<echo message="Processing environment: ${env.envName} (2)"/>
+					<ac:var name="work.envName" value="${env.envName}"/>
+					<antcall target="extract-step"/>
+				</else>
+			</ac:if>
+		</target>
+
+
+		<target name="extract-step" depends="clean,setEnv" description="Extract step for an individual environment-configuration from the org based on package.xml to local repository">
+			<mkdir dir="${work.deploy.location}\src"/>
+			<!-- Retrieve the contents into another directory -->
+			<ac:for list="${work.unpackaged}" param="unpackage.name" delimiter="|">
+				<sequential>
+					<echo message="1-Extracting unpackaged from ${work.serverurl} to ${work.deploy.location} using package ${work.repo.location}\${sf.package.location}\${work.release_branch}\@{unpackage.name}" />
+					<sf:retrieve
+						username="${work.username}"
+						password="${work.password}"
+						serverurl="${work.serverurl}"
+						maxPoll="${sf.maxPoll}"
+						pollWaitMillis="${sf.pollWaitMillis}"
+						retrieveTarget="${work.deploy.location}\src"
+						unpackaged="${work.repo.location}\${sf.package.location}\${work.release_branch}\@{unpackage.name}"/>
+				</sequential>
+			</ac:for>
+			<ac:if>
+				<isset property="copy"/>
+				<then>
+					<echo message="Performing copy from ${work.deploy.location}\src to ${work.repo.location}\src"/>
+					<copy todir="${work.repo.location}\src">
+					  <fileset dir="${work.deploy.location}\src"/>
+					</copy>
+				</then>
+			</ac:if>
+		</target>
+		
+		<target name="extract-deploy" description="Extract all configuration from the org based on package.xml to local repository">
+			<ac:var name="env_index" value="0"/>
+			<ac:var name="passedEnv" value="${envName}"/>
+			<ac:var name="action" value="extract"/>
+			<ac:if>
+				<isset property="check"/>
+				<then>
+					<ac:var name="work.deploy.location" value="${work.deploy.check.location}"/>
+					<echo message="##Check is true---setting deploy location to: ${work.deploy.location}!"/>
+				</then>
+			</ac:if>
+			<ac:if>
+				<isset property="clean"/>
+				<then>
+					<ac:var name="work.deploy.location" value="${work.deploy.location}"/>
+					<antcall target="clean">
+						<param name="work.deploy.location" value="${work.deploy.location}"/>
+					</antcall>
+				</then>
+			</ac:if>
+			<ac:for list="${passedEnv}" param="env.name">
+				<sequential>
+					<echo message="========================================="/>
+					<ac:var name="envName" value="@{env.name}"/>
+					<ac:var name="work.envName" value="@{env.name}"/>
+					<ac:if>
+						<equals arg1="${env_index}" arg2="0"/>
+						<then>
+							<echo message="Extracting from environment: @{env.name}"/>
+						</then>
+						<else>
+							<echo message="Deploying to environment: @{env.name}"/>
+							<ac:var name="action" value="deploy"/>
+						</else>
+					</ac:if>
+					<antcall target="extract-deploy-step">
+						<param name="envName" value="@{env.name}"/>
+						<param name="action" value="${action}"/>
+					</antcall>
+					<ac:math result="env_index" operand1="${env_index}" operation="+" operand2="1" datatype="int" />	
+				</sequential>
+			</ac:for>
+		</target>
+
+		<target name="extract-deploy-step" depends="setEnv" description="Extract step for an individual environment-configuration from the org based on package.xml to local repository">
+			<ac:var name="deployLocation" value="${work.deploy.location}"/>
+			<ac:if>
+				<isset property="check"/>
+				<then>
+					<ac:var name="deployLocation" value="${work.deploy.check.location}"/>
+				</then>
+			</ac:if>
+			<mkdir dir="${deployLocation}\src"/>
+			<!-- Retrieve the contents into another directory -->
+			<ac:if>
+				<equals arg1="${action}" arg2="extract"/>
+				<then>
+					<echo message="Extracting from environment: ${work.envName}(${work.serverurl}) to ${deployLocation} using package ${work.repo.location}\${sf.package.location}\${work.release_branch}\${work.unpackaged}"/>
+					<sf:retrieve
+						username="${work.username}"
+						password="${work.password}"
+						serverurl="${work.serverurl}"
+						maxPoll="${sf.maxPoll}"
+						pollWaitMillis="${sf.pollWaitMillis}"
+						retrieveTarget="${deployLocation}\src"
+						unpackaged="${work.repo.location}\${sf.package.location}\${work.release_branch}\${work.unpackaged}"/>
+				</then>
+				<else>
+					<ac:if>
+						<isset property="code"/>
+						<then>
+							<echo message="###################################################################################################"/>
+							<echo message="Performing a Code deploy of ${work.deploy.location}\src to ${work.serverurl}..." />
+							<echo message="###################################################################################################"/>
+							<sf:deploy
+								username="${work.username}"
+								password="${work.password}"
+								serverurl="${work.serverurl}"
+								maxPoll="${sf.maxPoll}"
+								pollWaitMillis="${sf.pollWaitMillis}"
+								singlePackage="true"
+								ignoreWarnings="true"
+								deployRoot="${work.deploy.location}\src"
+								testLevel="RunSpecifiedTests"
+								allowMissingFiles="true"	
+								checkOnly="true"
+								rollbackOnError="true">
+						        <runTest></runTest>
+							</sf:deploy>
+						</then>
+						<else>
+							<echo message="###################################################################################################"/>
+							<echo message="Performing a deploy of ${work.deploy.location}\src to ${work.serverurl}..." />
+							<echo message="###################################################################################################"/>
+							<sf:deploy
+								username="${work.username}"
+								password="${work.password}"
+								serverurl="${work.serverurl}"
+								maxPoll="${sf.maxPoll}"
+								pollWaitMillis="${sf.pollWaitMillis}"
+								singlePackage="true"
+								ignoreWarnings="true"
+								deployRoot="${work.deploy.location}\src"
+								allowMissingFiles="true"	
+								rollbackOnError="true">
+							</sf:deploy>
+						</else>
+					</ac:if>
+					<echo message="Deploying to environment: ${work.envName}(${work.serverurl}) from ${deployLocation}"/>
+					<sf:deploy
+						username="${work.username}"
+						password="${work.password}"
+						serverurl="${work.serverurl}"
+						maxPoll="${sf.maxPoll}"
+						pollWaitMillis="${sf.pollWaitMillis}"
+						singlePackage="true"
+						ignoreWarnings="true"
+						deployRoot="${deployLocation}\src"
+						allowMissingFiles="true"	
+						logType="Detail"
+						rollbackOnError="true"/>
+				</else>
+			</ac:if>
+		</target>
+
+		<target name="deploy-zip" depends="setEnv" unless="file.found" description="Deploy to the SF Org based on the package.xml">
+			<ac:var name="work.deployzip" value="${env.zipName}"/>
+			<echo message="Deploying the zip ${work.deployzip} from ${work.deploy.location} to ${work.serverurl}" />
+			<echo message="build.xml VERSION ${buildXMLVersion} (API Version: ${apiVersion})..............."/>
+
+			<sf:deploy
+				username="${work.username}"
+				password="${work.password}"
+				serverurl="${work.serverurl}"
+				maxPoll="${sf.maxPoll}"
+				pollWaitMillis="${sf.pollWaitMillis}"
+				singlePackage="true"
+				ignoreWarnings="true"
+				zipFile="..\deploy\zip\FOM.zip"
+				testLevel="RunSpecifiedTests"
+				allowMissingFiles="true"	
+				checkOnly="true"
+				rollbackOnError="true">
+				<runTest>Nintex_FOM_ControllerTest</runTest>
+				<runTest>VBA_FOM_DrawloopApexDataTest</runTest>
+			</sf:deploy>
+
+
+		</target>
+
+		<!--target name="deploy-single" depends="setEnv,prepBuildDir,retrieveCurrentArtifacts" unless="file.found" description="Deploy to the SF Org based on the package.xml"-->
+		<target name="deploy-single" depends="setEnv" unless="file.found" description="Deploy to the SF Org based on the package.xml">
+			<echo message="Deploying the Package ${work.unpackaged} from ${work.deploy.location} to ${work.serverurl}-single package" />
+			<copy file="${work.repo.location}\src\build\Releases\${work.release_branch}\${work.unpackaged}"
+				tofile="${work.deploy.location}\src\package.xml" overwrite="true" failonerror="true"/>
+
+			<ac:if>
+				<isset property="check"/>
+				<then>
+					<echo message="###################################################################################################"/>
+					<echo message="Performing a Check deploy of ${work.deploy.location}\src to ${work.serverurl}..." />
+					<echo message="###################################################################################################"/>
+					<sf:deploy
+						username="${work.username}"
+						password="${work.password}"
+						serverurl="${work.serverurl}"
+						maxPoll="${sf.maxPoll}"
+						pollWaitMillis="${sf.pollWaitMillis}"
+						singlePackage="true"
+						ignoreWarnings="true"
+						deployRoot="${work.deploy.location}\src"
+						allowMissingFiles="true"	
+						checkOnly="true"
+						logType="Detail"
+						rollbackOnError="true"/>
+				</then>
+				<else>
+					<sf:deploy
+						username="${work.username}"
+						password="${work.password}"
+						serverurl="${work.serverurl}"
+						maxPoll="${sf.maxPoll}"
+						pollWaitMillis="${sf.pollWaitMillis}"
+						singlePackage="true"
+						ignoreWarnings="true"
+						deployRoot="${work.deploy.location}\src"
+						allowMissingFiles="true"	
+						logType="Detail"
+						rollbackOnError="true"/>
+				</else>
+			</ac:if>
+		</target>
+		<target name="deploy" depends="setEnv,prepBuildDir,retrieveCurrentArtifacts">
+			<!-- build the full package.xml -->
+			<ac:if>
+				<isset property="check"/>
+				<then>
+					<ac:var name="check" value="true"/>
+				</then>
+				<else>
+					<ac:var name="check" value="false"/>
+				</else>
+			</ac:if>
+			<ac:if>
+				<isset property="skipApex"/>
+				<then>
+					<ac:var name="skipApex" value="true"/>
+				</then>
+				<else>
+					<ac:var name="skipApex" value="false"/>
+				</else>
+			</ac:if>
+			<ac:if>
+				<isset property="oneDeploy"/>
+				<then>
+					<ac:var name="oneDeploy" value="true"/>
+				</then>
+				<else>
+					<ac:var name="oneDeploy" value="false"/>
+				</else>
+			</ac:if>
+			<!--antcall target="git-pull"/-->
+			<antcall target="createFullPackage">
+				<param name="check" value="${check}"/>
+				<param name="skipApex" value="${skipApex}"/>
+				<param name="singlePackage" value="${work.unpackaged}"/>
+				<param name="oneDeploy" value="${oneDeploy}"/>
+			</antcall>
+			<echo message="build.xml VERSION ${buildXMLVersion} (API Version: ${apiVersion})..............."/>
+			<ac:if>
+				<isset property="pause"/>
+				<then>
+					<input message="1-Please verify Package_ALL.xml before proceeding-press return to continue (${work.repo.location}\\full_build.xml)"/>
+				</then>
+			</ac:if>
+			<echo message="EXECUTING Single BUILD---VERSION ${buildXMLVersion} (API Version: ${apiVersion})..(single deploy: ${oneDeploy})....(${work.repo.location}\\full_build.xml)........."/>
+			<sequential>
+				<ac:if>
+					<equals arg1="@{oneDeploy}" arg2="true"/>
+				<then>
+					<ant antfile="${work.repo.location}\full_build.xml" target="execute-deploy">
+						<property name="check" value="${check}"/>
+						<property name="work.envName" value="${work.envName}" />
+						<property name="work.serverurl" value="${work.serverurl}" />
+						<property name="work.username" value="${work.username}" />
+						<property name="work.password" value="${work.password}" />
+						<property name="work.deploy.location" value="${work.deploy.full.location}" />
+						<property name="work.repo.location" value="${work.repo.full.location}" />
+						<property name="zip.deploy.location" value="${work.deploy.location}\zip" />
+						<property name="maxPoll" value="${sf.maxPoll}"/>
+						<property name="pollWaitMillis" value="${sf.pollWaitMillis}"/>
+						<property name="work.release_branch" value="${work.release_branch}"/>
+						<property name="work.unpackaged" value="${work.unpackaged}"/>
+					</ant>
+				</then>
+				<else>
+					<echo message="......performing two separate deploys..(single deploy: ${oneDeploy}).............${work.unpackaged}"/>
+					<ant antfile="${work.repo.location}\full_build.xml" target="execute-deploy">
+						<property name="check" value="${check}"/>
+						<property name="work.envName" value="${work.envName}" />
+						<property name="work.serverurl" value="${work.serverurl}" />
+						<property name="work.username" value="${work.username}" />
+						<property name="work.password" value="${work.password}" />
+						<property name="work.deploy.location" value="${work.deploy.full.location}" />
+						<property name="work.repo.location" value="${work.repo.full.location}" />
+						<property name="zip.deploy.location" value="${work.deploy.location}\zip" />
+						<property name="maxPoll" value="${sf.maxPoll}"/>
+						<property name="pollWaitMillis" value="${sf.pollWaitMillis}"/>
+						<property name="work.release_branch" value="${work.release_branch}"/>
+						<property name="work.unpackaged" value="${work.unpackaged}"/>
+					</ant>
+					<ac:if>
+						<isset property="pause"/>
+						<then>
+							<input message="2-Please verify Package_FLOW.xml before proceeding-press return to continue (${work.repo.location}\flow_build.xml)"/>
+						</then>
+					</ac:if>
+					<ac:var name="work.unpackaged" value="Package_FLOW.xml"/>
+					<echo message="EXECUTING FLOW BUILD---VERSION ${buildXMLVersion} (API Version: ${apiVersion})...............${work.unpackaged}"/>
+					<ant antfile="${work.repo.location}\flow_build.xml" target="execute-deploy">
+						<property name="check" value="${check}"/>
+						<property name="work.envName" value="${work.envName}" />
+						<property name="work.serverurl" value="${work.serverurl}" />
+						<property name="work.username" value="${work.username}" />
+						<property name="work.password" value="${work.password}" />
+						<property name="work.deploy.location" value="${work.deploy.full.location}" />
+						<property name="work.repo.location" value="${work.repo.full.location}" />
+						<property name="zip.deploy.location" value="${work.deploy.location}\zip" />
+						<property name="maxPoll" value="${sf.maxPoll}"/>
+						<property name="pollWaitMillis" value="${sf.pollWaitMillis}"/>
+						<property name="work.release_branch" value="${work.release_branch}"/>
+						<property name="work.unpackaged" value="Package_FLOW.xml"/>
+					</ant>
+				</else>
+			</ac:if>
+			</sequential>
+		</target>
+
+		<!-- target name="deploy-deploy-code" depends="prepBuildDir,retrieveCurrentArtifacts,findFlowsToDeploy" unless="file.found" description="Deploy to the SF Org based on the package.xml" -->
+		<target name="deploy-code" depends="setEnv" unless="file.found" description="Deploy to the SF Org based on the package.xml">
+			<echo message="Deploying the CODE Package ${work.unpackaged} from ${work.deploy.location} to ${work.serverurl}--single package" />
+
+			<copy file="${work.repo.location}\${sf.package.location}\${work.release_branch}\${work.unpackaged}"
+				tofile="${work.deploy.location}\src\package.xml" overwrite="true" failonerror="true"/>
+			
+			<ac:var name="runTests" value=""/>
+			<ac:for list="${execute_tests}"  param="env.package.name" delimiter="|">
+				<sequential>
+					<ac:var name="runTests" value="&lt;runTest&gt;@{env.package.name}&lt;\runTest&gt;${runTests}"/>
+				</sequential>
+			</ac:for>
+			
+			<echo message="preparing to execute the following scripts: ${runTests}"/>
+
+			<ac:if>
+				<isset property="check"/>
+				<then>
+					<echo message="###################################################################################################"/>
+					<echo message="Performing a Check deploy of ${work.deploy.location}\src to ${work.serverurl}..." />
+					<echo message="###################################################################################################"/>
+					<sf:deploy
+						username="${work.username}"
+						password="${work.password}"
+						serverurl="${work.serverurl}"
+						maxPoll="${sf.maxPoll}"
+						pollWaitMillis="${sf.pollWaitMillis}"
+						singlePackage="true"
+						ignoreWarnings="true"
+						deployRoot="${work.deploy.location}\src"
+						testLevel="RunSpecifiedTests"
+						allowMissingFiles="true"	
+						checkOnly="true"
+						rollbackOnError="true">
+						<runTest></runTest>
+					</sf:deploy>
+				</then>
+				<else>
+					<sf:deploy
+						username="${work.username}"
+						password="${work.password}"
+						serverurl="${work.serverurl}"
+						maxPoll="${sf.maxPoll}"
+						pollWaitMillis="${sf.pollWaitMillis}"
+						singlePackage="true"
+						ignoreWarnings="true"
+						deployRoot="${work.deploy.location}\src"
+						testLevel="RunSpecifiedTests"
+						allowMissingFiles="true"	
+						rollbackOnError="true">
+				        <runTest></runTest>
+					</sf:deploy>
+				</else>
+			</ac:if>
+		</target>
+		
+		<!-- ===================================================================================================================================================== -->
+		<!-- git related targets -->
+
+		<target name="git-clone" unless="file.found" description="Create directory structure, clone the remote repository and the pull that latest source">
+			<echo message="Cloning the repository ${sf.repository} to ${sf.init.repo.location}" />
+			<echo message="Deleting all extracted directories...${sf.init.repo.location}	"/>
+			<delete dir=".git"/>
+			<delete dir="${sf.init.repo.location}\src"/>
+			<!-- defaultexcludes remove=".gitignore"/ -->
+			<delete includeEmptyDirs="true" verbose="true">
+				<fileset dir=".">
+					<include name="${sf.init.repo.location}\*.*" />
+					<include name="${sf.init.repo.location}\.gitignore" />
+					<include name="${sf.init.repo.location}\.*" />
+					<include name="${sf.init.repo.location}\**\*.*" />
+					<include name="${sf.init.repo.location}\.*.*" />
+					<exclude name="*,xml" />
+					<exclude name="*build.*" />
+					<exclude name=".gitignore" />
+				</fileset>
+			</delete>
+			<delete dir="${sf.init.repo.location}"/>
+			<git command="init" />
+			<git command="clone">
+				<args>
+					<arg value="--branch" />
+					<arg value="${sf.develop_branch}" />
+					<arg value="${sf.repository}" />
+					<arg value="${sf.init.repo.location}" />
+				</args>
+			</git>
+			<git command="checkout">
+				<args>
+					<arg value="-b" />
+					<arg value="${sf.develop_branch}" />
+				</args>
+			</git>
+			<copy todir="${sf.init.repo.location}">
+			  <fileset dir=".\">
+					<include name="build.*" />
+				</fileset>
+			</copy>
+			<git command="status" />
+		</target>
+
+		<target name="git-pull" unless="file.found" description="Update the current local repository from the remote repository">
+			<ac:if>
+				<isset property="setBranch"/>
+				<then>
+					<ac:var name="branchName" value="${setBranch}"/>
+				</then>
+				<else>
+					<ac:var name="branchName" value="${work.branch}"/>
+				</else>
+			</ac:if>
+			<echo message="Pulling updates from the repository ${sf.repository} (branch ${branchName}) to ${sf.repo.location}" />
+			<git command="checkout">
+				<args>
+					<!-- arg value="-b" /-->
+					<arg value="${branchName}" />
+				</args>
+			</git>
+			<git command="pull">
+				<args>
+					<arg value="-v" />
+					<arg value="origin" />
+					<!-- arg value="${sf.repository}" / -->
+					<arg value="${branchName}" />
+					<!-- arg value="${dev.location}" / -->
+				</args>
+			</git>
+			<git command="status" />
+		</target>
+
+
+		<target name="git-push" description="Push changes in the local repository to the remote repository">
+			<ac:if>
+				<isset property="commitMessage"/>
+				<then>
+					<ac:var name="commit-message" value="${commitMessage}"/>
+					<echo message="Commit message passed in: ${commit-message}"/>
+				</then>
+				<else>
+					<input message="Commit message" addproperty="commit-message" />
+				</else>
+			</ac:if>
+			<ac:if>
+				<isset property="setBranch"/>
+				<then>
+					<ac:var name="branchName" value="${setBranch}"/>
+				</then>
+				<else>
+					<ac:var name="branchName" value="${work.branch}"/>
+				</else>
+			</ac:if>
+			<echo message="Commiting all changes with message ${commit-message} to branch ${branchName}" />
+			<git command="checkout">
+				<args>
+					<arg value="${branchName}" />
+				</args>
+			</git>
+			<git command="add">
+				<args>
+					<arg value="." />
+				</args>
+			</git>
+			<git command="commit">
+				<args>
+					<arg value="-m ${commit-message}" />
+				</args>
+			</git>
+			<git command="push">
+				<args>
+					<arg value="origin" />
+					<arg value="${branchName}" />
+				</args>
+			</git>
+		</target>
+
+		<target name="extract-push" depends="setEnv" description="Extract all configuration from the org based on package.xml to local repository and then push to the remote repository">
+			<echo message="##Extracting from the url ${work.serverurl} and pushing to the repository ${sf.repository} from ${sf.repo.location}..." />
+			<antcall target="git-pull"/>
+			<antcall target="extract"/>
+			<antcall target="git-push"/>
+		</target>
+
+		<!-- ===================================================================================================================================================== -->
+		<!-- DTC related targets -->
+
+		<target name="create_branches">
+			<ac:for list="${branches}" param="branch.name">
+				<sequential>
+					<echo message="========================================="/>
+
+					<if>
+					    <contains string="@{branch.name}" substring="Release_" />
+					    <then>
+							<echo message="Creating Release branch: @{branch.name}"/>
+							<git command="checkout">
+								<args>
+									<arg value="master" />
+								</args>
+							</git>
+					    	<echo message="Creating the directory ${sf.package.location}\@{branch.name}..."/>
+							<mkdir dir="${sf.package.location}\@{branch.name}"/>
+					    	<echo message="Copying the file .\src\README.md to ${sf.package.location}\@{branch.name}\README.md..."/>
+							<copy file=".\src\README.md"
+								tofile="${sf.package.location}\@{branch.name}\README.md" overwrite="true" failonerror="true"/>
+					    	<echo message="Adding the new release folder ${sf.package.location}\@{branch.name} to the repo and committing it..."/>
+							<git command="add">
+								<args>
+									<arg value="${sf.package.location}\@{branch.name}\README.md" />
+								</args>
+							</git>
+							<git command="commit">
+								<args>
+									<arg value="-m Setting up new release folder" />
+								</args>
+							</git>
+							<git command="push">
+								<args>
+									<arg value="origin" />
+									<arg value="master" />
+								</args>
+							</git>
+					    	<echo message="Creating the new branch: @{branch.name} in the local repo..."/>
+							<git command="checkout">
+								<args>
+									<arg value="-b" />
+									<arg value="@{branch.name}" />
+								</args>
+							</git>
+					    	<echo message="Pushing the new branch: @{branch.name} to the remote Git repo..."/>
+							<git command="push">
+								<args>
+									<arg value="origin" />
+									<arg value="@{branch.name}" />
+								</args>
+							</git>
+					    </then>
+					    <else>
+							<echo message="Creating Feature branch: @{branch.name}"/>
+							<git command="checkout">
+								<args>
+									<arg value="${work.release_branch}" />
+								</args>
+							</git>
+					    	<echo message="Creating the new branch: @{branch.name} in the local repo..."/>
+							<git command="checkout">
+								<args>
+									<arg value="-b" />
+									<arg value="@{branch.name}" />
+								</args>
+							</git>
+					    	<echo message="Pushing the new branch: @{branch.name} to the remote Git repo..."/>
+							<git command="push">
+								<args>
+									<arg value="origin" />
+									<arg value="@{branch.name}" />
+								</args>
+							</git>
+					    </else>
+					</if>					
+				</sequential>
+			</ac:for>
+		</target>
+		
+		<target name="extract-all-packages" description="Extract all packages from the specific SF environment">
+			<ac:if>
+				<isset property="check"/>
+				<then>
+					<ac:var name="${work.deploy.location}" value="${work.deploy.check.location}"/>
+				</then>
+			</ac:if>
+			<ac:if>
+				<isset property="clean"/>
+				<then>
+					<ac:var name="${work.deploy.location}" value="${work.deploy.check.location}"/>
+					<antcall target="clean"/>
+				</then>
+			</ac:if>
+			<mkdir dir="${work.deploy.location}"/>
+			<echo message="looping through these environments: ${sf.envName}..."/>
+			<ac:for list="${sf.envName}" param="env.name">
+				<sequential>
+					<echo message="========================================="/>
+					<ac:var name="envName" value="@{env.name}"/>
+					<echo message="Processing environment: @{env.name}"/>
+					<ac:var name="work.envName" value="@{env.name}"/>
+					<antcall target="extract-package"/>
+				</sequential>
+			</ac:for>
+		</target>
+
+		<target name="extract-package" depends="setEnv" description="Extract step for an individual environment based on the packages specified">
+			<!-- Retrieve the contents into another directory -->
+			<echo message="-------------------------------------------"/>
+			<echo message="Processing environment: ${work.envName} package: ${work.unpackaged}..."/>
+			<ac:for list="${work.unpackaged}" param="unpackage.name" delimiter="|">
+				<sequential>
+				<ac:if>
+					<equals arg1="@{unpackage.name}" arg2="Package_All.xml"/>
+					<then>
+						<echo message="This ALL package and as such will not be part of the extract (probably for ISITDTC, UAT, Staging, or PROD)..."/>
+					</then>
+					<else>
+						<echo message="--------------------------------------------------------------------------------------------------------------------------------------------------------"/>
+						<echo message="********************************************************************************************************************************************************"/>
+						<echo message="--------------------------------------------------------------------------------------------------------------------------------------------------------"/>
+						<echo message="Extracting unpackaged from ${work.serverurl} to ${work.deploy.location} using package ${work.repo.location}\${sf.package.location}\${work.release_branch}\@{unpackage.name}" />
+						<sf:retrieve
+							username="${work.username}"
+							password="${work.password}"
+							serverurl="${work.serverurl}"
+							maxPoll="${sf.maxPoll}"
+							pollWaitMillis="${sf.pollWaitMillis}"
+							retrieveTarget="${work.deploy.location}\src"
+							unpackaged="${work.repo.location}\${sf.package.location}\${work.release_branch}\@{unpackage.name}"/>
+						</else>
+					</ac:if>
+				</sequential>
+			</ac:for>
+			<ac:if>
+				<isset property="copy"/>
+				<then>
+					<echo message="Performing copy from ${work.deploy.location}\src to ${work.repo.location}\src"/>
+					<copy todir="${work.repo.location}\src">
+					  <fileset dir="${work.deploy.location}\src"/>
+					</copy>
+				</then>
+			</ac:if>
+		</target>
+
+		<target name="deploy-all-individual" depends="setEnv" description="Deploy all packages to the specific SF environment, one at a time">
+			<ac:for list="${sf.unpackaged}" param="env.package.name">
+				<sequential>
+					<ac:if>
+						<equals arg1="@{env.package.name}" arg2="Package_All.xml"/>
+						<then>
+							<echo message="This ALL package and as such will not be part of the extract (probably for ISITDTC, UAT, Staging, or PROD)..."/>
+						</then>
+						<else>
+							<echo message="\n\n\n"/>
+							<echo message="================================================================================================================================"/>
+							<echo message="================================================================================================================================"/>
+							<echo message="Extracting from: ${from.envName} Deploying to: ${to.envName} with package @{env.package.name}"/>
+							<echo message="-------------------------------------------"/>
+							<echo message="Processing package: @{env.package.name}..."/>
+							<ac:for list="@{env.package.name}" param="unpackage.name" delimiter="|">
+								<sequential>
+									<mkdir dir="${work.deploy.location}\@{unpackage.name}\src"/>
+									<!-- antcall target="clean"/ -->
+									<echo message="--------------------------------------------------------------------------------------------------------------------------------------------------------"/>
+									<echo message="********************************************************************************************************************************************************"/>
+									<echo message="--------------------------------------------------------------------------------------------------------------------------------------------------------"/>
+									<echo message="Extracting unpackaged from ${from.serverurl} to ${work.deploy.location}\@{unpackage.name}\src using package ${work.repo.location}\${sf.package.location}\${work.release_branch}\@{unpackage.name}" />
+									<sf:retrieve
+										username="${from.username}"
+										password="${from.password}"
+										serverurl="${from.serverurl}"
+										maxPoll="${sf.maxPoll}"
+										pollWaitMillis="${sf.pollWaitMillis}"
+										retrieveTarget="${work.deploy.location}\@{unpackage.name}\src"
+										unpackaged="${work.repo.location}\${sf.package.location}\${work.release_branch}\@{unpackage.name}"/>
+									<antcall target="deploy-package">
+										<param name="envPackageName" value="@{unpackage.name}"/>
+									</antcall>
+								</sequential>
+							</ac:for>
+						</else>
+					</ac:if>
+				</sequential>
+			</ac:for>
+		</target>
+
+		<!-- target name="deploy-package" depends="prepBuildDir,retrieveCurrentArtifacts,findFlowsToDeploy" unless="file.found" description="Deploy to the SF Org based on the package.xml" -->
+		<target name="deploy-package" unless="file.found" description="Deploy to the SF Org based on the package.xml">
+			<echo message="Deploying the Package ${envPackageName} from ${work.deploy.location} to ${to.serverurl}--single package" />
+			<copy file="${work.repo.location}\${sf.package.location}\${work.release_branch}\${envPackageName}"
+				tofile="${work.deploy.location}\src\package.xml" overwrite="true" failonerror="true"/>
+
+			<ac:if>
+				<isset property="check"/>
+				<then>
+					<echo message="###################################################################################################"/>
+					<echo message="Performing a Check deploy of ${work.deploy.location}\${envPackageName}\src to ${to.serverurl}..." />
+					<echo message="###################################################################################################"/>
+					<sf:deploy
+						username="${to.username}"
+						password="${to.password}"
+						serverurl="${to.serverurl}"
+						maxPoll="${sf.maxPoll}"
+						pollWaitMillis="${sf.pollWaitMillis}"
+						singlePackage="true"
+						ignoreWarnings="true"
+						deployRoot="${work.deploy.location}\${envPackageName}\src"
+						allowMissingFiles="true"	
+						checkOnly="true"
+						logType="Detail"
+						rollbackOnError="true"/>
+				</then>
+				<else>
+					<sf:deploy
+						username="${to.username}"
+						password="${to.password}"
+						serverurl="${to.serverurl}"
+						maxPoll="${sf.maxPoll}"
+						pollWaitMillis="${sf.pollWaitMillis}"
+						singlePackage="true"
+						ignoreWarnings="true"
+						deployRoot="${work.deploy.location}\src"
+						allowMissingFiles="true"	
+						logType="Detail"
+						rollbackOnError="true"/>
+				</else>
+			</ac:if>
+		</target>
+
+		<target name="deploy-package_x" depends="clean" description="Extract step for an individual environment based on the packages specified">
+			<!-- Retrieve the contents into another directory -->
+			<echo message="-------------------------------------------"/>
+			<echo message="Processing package: ${envPackageName}..."/>
+			<ac:if>
+				<equals arg1="${envPackageName}" arg2="Package_All.xml"/>
+				<then>
+					<echo message="This ALL package and as such will not be part of the extract (probably for ISITDTC, UAT, Staging, or PROD)..."/>
+				</then>
+				<else>
+					<ac:for list="${envPackageName}" param="unpackage.name" delimiter="|">
+						<sequential>
+							<echo message="--------------------------------------------------------------------------------------------------------------------------------------------------------"/>
+							<echo message="********************************************************************************************************************************************************"/>
+							<echo message="--------------------------------------------------------------------------------------------------------------------------------------------------------"/>
+							<echo message="Extracting unpackaged from ${from.serverurl} to ${work.deploy.location} using package ${work.repo.location}\${sf.package.location}\${work.release_branch}\@{unpackage.name}  check=${check}..." />
+							<sf:retrieve
+								username="${from.username}"
+								password="${from.password}"
+								serverurl="${from.serverurl}"
+								maxPoll="${sf.maxPoll}"
+								pollWaitMillis="${sf.pollWaitMillis}"
+								retrieveTarget="${work.deploy.location}\src"
+								unpackaged="${work.repo.location}\${sf.package.location}\${work.release_branch}\@{unpackage.name}"/>
+						</sequential>
+					</ac:for>
+				</else>
+			</ac:if>
+			<ac:if>
+				<isset property="copy"/>
+				<then>
+					<echo message="Performing copy from ${work.deploy.location}\src to ${work.repo.location}\src"/>
+					<copy todir="${work.repo.location}\src">
+					  <fileset dir="${work.deploy.location}\src"/>
+					</copy>
+				</then>
+			</ac:if>
+		</target>
+		
+		<target name="deploy-full" depends="setEnv,prepBuildDir,retrieveCurrentArtifacts">
+			<!-- build the full package.xml -->
+			<ac:if>
+				<isset property="check"/>
+				<then>
+					<ac:var name="check" value="true"/>
+				</then>
+				<else>
+					<ac:var name="check" value="false"/>
+				</else>
+			</ac:if>
+			<ac:if>
+				<isset property="skipApex"/>
+				<then>
+					<ac:var name="skipApex" value="true"/>
+				</then>
+				<else>
+					<ac:var name="skipApex" value="false"/>
+				</else>
+			</ac:if>
+			<ac:if>
+				<isset property="oneDeploy"/>
+				<then>
+					<ac:var name="oneDeploy" value="true"/>
+				</then>
+				<else>
+					<ac:var name="oneDeploy" value="false"/>
+				</else>
+			</ac:if>
+			<!--antcall target="git-pull"/-->
+			<antcall target="createFullPackage">
+				<param name="check" value="${check}"/>
+				<param name="skipApex" value="${skipApex}"/>
+				<param name="oneDeploy" value="${oneDeploy}"/>
+			</antcall>
+			<echo message="build.xml VERSION ${buildXMLVersion} (API Version: ${apiVersion})..(single deploy: ${oneDeploy})..(Validation: ${check}) ...........#@"/>
+			<ac:if>
+				<isset property="pause"/>
+				<then>
+					<input message="2-Please verify Package_ALL.xml before proceeding-press return to continue (${work.repo.location}\full_build.xml)"/>
+				</then>
+			</ac:if>
+			<echo message="EXECUTING FULL BUILD---VERSION ${buildXMLVersion} (API Version: ${apiVersion})..(single deploy: ${oneDeploy})............."/>
+			<ac:var name="work.unpackaged" value="Package_ALL.xml"/>
+			<sequential>
+				<ac:if>
+					<equals arg1="@{oneDeploy}" arg2="true"/>
+				<then>
+					<ant antfile="${work.repo.location}\full_build.xml" target="execute-deploy">
+						<property name="check" value="${check}"/>
+						<property name="work.envName" value="${work.envName}" />
+						<property name="work.serverurl" value="${work.serverurl}" />
+						<property name="work.username" value="${work.username}" />
+						<property name="work.password" value="${work.password}" />
+						<property name="work.deploy.location" value="${work.deploy.full.location}" />
+						<property name="work.repo.location" value="${work.repo.full.location}" />
+						<property name="zip.deploy.location" value="${work.deploy.location}\zip" />
+						<property name="maxPoll" value="${sf.maxPoll}"/>
+						<property name="pollWaitMillis" value="${sf.pollWaitMillis}"/>
+						<property name="work.release_branch" value="${work.release_branch}"/>
+						<property name="work.unpackaged" value="${work.unpackaged}"/>
+					</ant>
+				</then>
+				<else>
+					<echo message="......performing two separate deploys..(single deploy: ${oneDeploy}).............${work.unpackaged}"/>
+					<ant antfile="${work.repo.location}\full_build.xml" target="execute-deploy">
+						<property name="check" value="${check}"/>
+						<property name="work.envName" value="${work.envName}" />
+						<property name="work.serverurl" value="${work.serverurl}" />
+						<property name="work.username" value="${work.username}" />
+						<property name="work.password" value="${work.password}" />
+						<property name="work.deploy.location" value="${work.deploy.full.location}" />
+						<property name="work.repo.location" value="${work.repo.full.location}" />
+						<property name="zip.deploy.location" value="${work.deploy.location}\zip" />
+						<property name="maxPoll" value="${sf.maxPoll}"/>
+						<property name="pollWaitMillis" value="${sf.pollWaitMillis}"/>
+						<property name="work.release_branch" value="${work.release_branch}"/>
+						<property name="work.unpackaged" value="${work.unpackaged}"/>
+					</ant>
+					<ac:if>
+						<isset property="pause"/>
+						<then>
+							<input message="2-Please verify Package_FLOW.xml before proceeding-press return to continue (${work.repo.location}\flow_build.xml)"/>
+						</then>
+					</ac:if>
+					<ac:var name="work.unpackaged" value="Package_FLOW.xml"/>
+					<echo message="EXECUTING FLOW BUILD---VERSION ${buildXMLVersion} (API Version: ${apiVersion})...............${work.unpackaged}"/>
+					<ant antfile="${work.repo.location}\flow_build.xml" target="execute-deploy">
+						<property name="check" value="${check}"/>
+						<property name="work.envName" value="${work.envName}" />
+						<property name="work.serverurl" value="${work.serverurl}" />
+						<property name="work.username" value="${work.username}" />
+						<property name="work.password" value="${work.password}" />
+						<property name="work.deploy.location" value="${work.deploy.full.location}" />
+						<property name="work.repo.location" value="${work.repo.full.location}" />
+						<property name="zip.deploy.location" value="${work.deploy.location}\zip" />
+						<property name="maxPoll" value="${sf.maxPoll}"/>
+						<property name="pollWaitMillis" value="${sf.pollWaitMillis}"/>
+						<property name="work.release_branch" value="${work.release_branch}"/>
+						<property name="work.unpackaged" value="Package_FLOW.xml"/>
+					</ant>
+				</else>
+			</ac:if>
+			</sequential>
+		</target>
+	 		
+		<target name="deploy-updates" depends="setEnv">
+			<!-- build the full package.xml -->
+			<!--antcall target="createFullPackage" /-->
+	 
+			<!-- pull from the release branch to make sure local and remote are in sync -->
+			<ac:if>
+				<isset property="setBranch"/>
+				<then>
+					<ac:var name="branchName" value="${setBranch}"/>
+				</then>
+				<else>
+					<ac:var name="branchName" value="${work.release_branch}"/>
+				</else>
+			</ac:if>
+			<ac:if>
+				<isset property="setPackage"/>
+				<then>
+					<ac:var name="packageName" value="${setPackage}"/>
+				</then>
+				<else>
+					<ac:var name="packageName" value="${work.unpackaged}"/>
+				</else>
+			</ac:if>
+			<echo message="Extracting all changes from branch ${branchName} using the package ${packageName}" />
+			<git command="checkout">
+				<args>
+					<arg value="${branchName}" />
+				</args>
+			</git>
+			<echo message="Performing copy of ${work.unpackaged} from ${work.repo.location}\${sf.package.location}\${work.release_branch}\${work.unpackaged} to ${work.deploy.location}\src"/>
+		    <mkdir dir="${work.deploy.location}\zip\src"/>
+			<copy file="${work.repo.location}\${sf.package.location}\${work.release_branch}\${packageName}"
+				tofile="${work.deploy.location}\zip\src\package.xml" overwrite="true" failonerror="true"/>
+			<echo message="Executing" />
+			<exec executable="\bin\bash">
+				<arg value="deploy_updates.sh"/>
+				<arg value="${work.deploy.location}\zip\deploy_changes.zip"/>
+				<arg value="src\package.xml"/>
+				<arg value="${work.release_branch}"/>
+			</exec>
+
+			<!-- git extract the diff/changes and zip -->
+			<!-- deploy zip to the specified SF environment -->
+		</target>
+			
+		<target name="backup">
+			<copy todir="${env.deployLocation}\build">
+			  	<fileset dir="${env.repoLocation}\src\build\Releases"/>
+				<fileset dir="${env.repoLocation}\src\build">
+					<include name="*.sh"/>
+				</fileset>
+			</copy>
+			<copy file="build.xml" todir="..\build"/>
+			<copy file="build.properties" todir="..\build"/>
+			<copy file="deploy_template.xml" todir="..\build"/>
+			<copy file="excludeFromDeploy.xml" todir="..\build"/>
+		</target>
+
+		<!-- ===================================================================================================================================================== -->
+		<!-- worker related targets -->
+
+	    <target name="retrieveCurrentArtifacts" depends="">
+		   <echo message="Retriving artifacts from ${work.serverurl} with package ${work.repo.location}\src\build\excludeFromDeploy.xml"/>
+			<ac:if>
+				<isset property="noFlow"/>
+				<then>
+					<echo message="SKIPPING the extraction of Current Artifacts!!"/>
+				</then>
+				<else>
+					<ac:if>
+						<isset property="flowsExtracted"/>
+						<then>
+							<echo message="......flows and entitlements already extracted...not re-extracting them..."/>
+						</then>
+						<else>					
+									<echo message="Environment          : ${work.envName}"/>
+									<echo message="        ServerURL    : ${work.serverurl}" />
+									<echo message="         username    : ${work.username}"/>
+									<echo message="         password:   : ${work.password}"/>
+									<echo message="deploy full location  : ${work.deploy.full.location}"/>
+									<echo message="   deploy location    : ${work.deploy.location}"/>
+									<echo message="deploy check location : ${work.deploy.check.location}"/>
+									<echo message="repo full location    : ${work.repo.full.location}"/>
+									<echo message="     repo location    : ${work.repo.location}"/>
+									<echo message="        unpackaged    : ${work.unpackaged}"/>
+									<echo message="            branch    : ${work.branch}"/>
+									<echo message="    release branch    : ${work.release_branch}"/>
+					       <sf:retrieve username="${work.username}"
+					       	password="${work.password}"
+					       	serverurl="${work.serverurl}"
+					       	retrieveTarget="${work.deploy.location}\build"
+					       	unpackaged="${work.repo.location}\src\build\excludeFromDeploy.xml" />
+						</else>
+					</ac:if>
+				</else>
+			</ac:if>
+	    </target>
+
+	    <target name="prepBuildDir">
+			<ac:if>
+				<isset property="flowsExtracted"/>
+				<then>
+					<echo message="......flows and entitlements already extracted...not deleting the directory..."/>
+				</then>
+				<else>					
+					<echo message="Creating flows and entitlements directories at ${work.deploy.location}\build..."/>
+			       <delete dir="${work.deploy.location}\build"/>
+			       <mkdir dir="${work.deploy.location}\build"/>
+				</else>
+			</ac:if>
+	    </target>
+
+		<target name="createFullPackage">
+	  	   <script language="javascript">
+	  	   	<![CDATA[
+	          var File = java.io.File;
+	          var FileWriter = java.io.FileWriter;  	   	
+			  var fullDirectory = project.getProperty( "work.deploy.full.location" );
+			  var repoDirectory = project.getProperty( "work.repo.full.location" );
+			  var release       = project.getProperty( "work.release_branch" );
+			  var checkBuild    = project.getProperty( "check" );
+			  var apiVersion    = project.getProperty( "apiVersion" );
+			  var oneDeployStr  = project.getProperty( "oneDeploy" );
+				var singlePackage = false;
+				var singlePackageStr = project.getProperty( "singlePackage" );
+				if ( singlePackageStr != null ) {
+					singlePackage = true;
+				}
+				var skipApex = false;
+				var skipApexStr   = project.getProperty( "skipApex" );
+				if ( skipApexStr != null && skipApexStr != "false" ) {
+					skipApex = true;
+				}
+				var oneDeploy = false;
+			  var oneDeployStr  = project.getProperty( "oneDeploy" );
+				if ( oneDeployStr != null && oneDeployStr != "false" ) {
+					oneDeploy = true;
+				}
+				var showDebug     = false;
+				var nameMap = new Array();
+				var fileMap = new Array();
+				var outFileMap = new Array();
+				var objectMap  = new Array();
+				var apexClasses = new Array();
+				var entitlements = new Array();
+				var finalReport = new Array();
+				var flows = new Array();
+			  var flowsSaved=0;
+	  	  java.lang.System.out.println("Inside createFullPackage: processing in location: "+fullDirectory+" check: "+checkBuild+
+	  	   				" singlePackage: "+singlePackage+" value: "+singlePackageStr+" skipApex: "+skipApex+" oneDeploy: "+oneDeploy+"->"+oneDeployStr);
+	  	   	
+			  // this is the first step of the process--loading the matrix of MetaData types to directories and how components are stored in the directories
+	  	   	  function loadObjectMap() {
+				fileMap.push({inName:"AccountCriteriaBasedSharingRule",outName:"accountSharingRules",suffix:".*"});
+		    	fileMap.push({inName:"ApexClass",outName:"classes",suffix:".*"});
+		    	fileMap.push({inName:"ApexComponent",outName:"components",suffix:".*"});
+		    	fileMap.push({inName:"ApexPage",outName:"pages",suffix:".*"});
+		    	fileMap.push({inName:"ApexTrigger",outName:"triggers",suffix:".*"});
+			  	fileMap.push({inName:"AppMenu",outName:"appMenus",suffix:".*"});
+		    	fileMap.push({inName:"ApprovalProcess",outName:"approvalProcesses",suffix:".*"});
+			  	fileMap.push({inName:"AssignmentRules",outName:"assignmentRules",suffix:".*"});
+		    	fileMap.push({inName:"AuraDefinitionBundle",outName:"aura",suffix:"/**/*"});
+			  	fileMap.push({inName:"AutoResponseRules",outName:"autoResponseRules",suffix:".*"});
+		    	fileMap.push({inName:"BusinessProcess",outName:"objects",suffix:".*"});
+		  	    fileMap.push({inName:"Certificate",outName:"certs",suffix:".*"});
+		  	    fileMap.push({inName:"CleanDataService",outName:"cleanDataServices",suffix:".*"});
+		  	    fileMap.push({inName:"Community",outName:"communities",suffix:".*"});
+		  	    fileMap.push({inName:"ConnectedApp",outName:"connectedApps",suffix:".*"});
+		  	    fileMap.push({inName:"ContentAsset",outName:"contentassets",suffix:".*"});
+		   		fileMap.push({inName:"CustomApplication",outName:"applications",suffix:".*"});
+		  	    fileMap.push({inName:"CustomApplicationComponent",outName:"customApplicationComponents",suffix:".*"});
+	  	   		fileMap.push({inName:"CustomField",outName:"objects",suffix:".*"});
+	  	   		fileMap.push({inName:"CustomLabel",outName:"labels",suffix:".*"});
+	  	   		fileMap.push({inName:"CustomLabels",outName:"labels",suffix:"CustomLabels"});
+		   	    fileMap.push({inName:"CustomMetadata",outName:"customMetadata",suffix:".*"});
+	  	   	    fileMap.push({inName:"CustomObject",outName:"objects",suffix:".*"});
+		  	    fileMap.push({inName:"CustomObjectTranslation",outName:"objectTranslations",suffix:".*"});
+		  	    fileMap.push({inName:"CustomPermission",outName:"customPermissions",suffix:".*"});
+		  	    fileMap.push({inName:"CustomSite",outName:"sites",suffix:".*"});
+		   	    fileMap.push({inName:"CustomTab",outName:"tabs",suffix:".*"});
+		  	    fileMap.push({inName:"Dashboard",outName:"dashboards",suffix:"*.*"});
+		   	    fileMap.push({inName:"DataCategoryGroup",outName:"datacategorygroups",suffix:".*"});
+		  	    fileMap.push({inName:"DelegateGroup",outName:"delegateGroups",suffix:".*"});
+		  	    fileMap.push({inName:"Document",outName:"documents",suffix:"*.*"});
+		  	    fileMap.push({inName:"DuplicateRule",outName:"duplicateRules",suffix:".*"});
+		  	    fileMap.push({inName:"EmailTemplate",outName:"email",suffix:"*.*"});
+		  	    fileMap.push({inName:"EntitlementProcess",outName:"entitlementProcesses",suffix:".*"});
+		  	    fileMap.push({inName:"EscalationRules",outName:"escalationRules",suffix:".*"});
+		  	    fileMap.push({inName:"ExternalDataSource",outName:"dataSources",suffix:".*"});
+	    	    fileMap.push({inName:"FlexiPage",outName:"flexipages",suffix:".*"});
+	    	    fileMap.push({inName:"Flow",outName:"flows",suffix:".*"});
+		  	    fileMap.push({inName:"FlowDefinition",outName:"flowDefinitions",suffix:".*"});
+	    	    fileMap.push({inName:"GlobalValueSet",outName:"globalValueSets",suffix:".*"});
+		  	    fileMap.push({inName:"GlobalValueSetTranslation",outName:"objects",suffix:".*"});
+	    	    fileMap.push({inName:"Group",outName:"groups",suffix:".*"});
+		  	    fileMap.push({inName:"HomePageComponent",outName:"homePageComponents",suffix:".*"});
+		  	    fileMap.push({inName:"HomePageLayout",outName:"homePageLayouts",suffix:".*"});
+		  	    fileMap.push({inName:"InstalledPackage",outName:"installedPackages",suffix:".*"});
+		  	    fileMap.push({inName:"Letterhead",outName:"letterhead",suffix:".*"});
+		   	    fileMap.push({inName:"Layout",outName:"layouts",suffix:".*"});
+		   	    fileMap.push({inName:"ListView",outName:"objects",suffix:".*"});
+		  	    fileMap.push({inName:"ManagedTopics",outName:"managedTopics",suffix:".*"});
+		  	    fileMap.push({inName:"MatchingRule",outName:"matchingRules",suffix:".*"});
+		  	    fileMap.push({inName:"MatchingRules",outName:"matchingRules",suffix:".*"});
+		  	    fileMap.push({inName:"MilestoneType",outName:"milestoneTypes",suffix:".*"});
+		  	    fileMap.push({inName:"NamedCredential",outName:"namedCredentials",suffix:".*"});
+		  	    fileMap.push({inName:"Network",outName:"networks",suffix:".*"});
+		  	    fileMap.push({inName:"NetworkBranding",outName:"networkBranding",suffix:".*"});
+		  	    fileMap.push({inName:"PathAssistant",outName:"pathAssistants",suffix:".*"});
+		   	    fileMap.push({inName:"PermissionSet",outName:"permissionsets",suffix:".*"});
+		  	    fileMap.push({inName:"Profile",outName:"profiles",suffix:".*"});
+		  	    fileMap.push({inName:"ProfilePasswordPolicy",outName:"profilePasswordPolicies",suffix:".*"});
+		  	    fileMap.push({inName:"ProfileSessionSetting",outName:"profileSessionSettings",suffix:".*"});
+		   	    fileMap.push({inName:"Queue",outName:"queues",suffix:".*"});
+		  	    fileMap.push({inName:"QuickAction",outName:"quickActions",suffix:".*"});
+	    	    fileMap.push({inName:"RecordType",outName:"objects",suffix:".*"});
+		  	    fileMap.push({inName:"RemoteSiteSetting",outName:"remoteSiteSettings",suffix:".*"});
+		  	    fileMap.push({inName:"Report",outName:"reports",suffix:"*.*"});
+		   	    fileMap.push({inName:"ReportType",outName:"reportTypes",suffix:".*"});
+		   	    fileMap.push({inName:"Role",outName:"roles",suffix:".*"});
+		  	    fileMap.push({inName:"SamlSsoConfig",outName:"samlssoconfigs",suffix:".*"});
+		  	    fileMap.push({inName:"Settings",outName:"settings",suffix:".*"});
+		  	    fileMap.push({inName:"SharingCriteriaRule",outName:"sharingRules",suffix:".*"});
+		  	    fileMap.push({inName:"SharingRules",outName:"sharingRules",suffix:".*"});
+		  	    fileMap.push({inName:"SharingSet",outName:"sharingSets",suffix:".*"});
+		  	    fileMap.push({inName:"StandardValueSet",outName:"standardValueSets",suffix:".*"});
+		  	    fileMap.push({inName:"SiteDotCom",outName:"siteDotComSites",suffix:".*"});
+		  	    fileMap.push({inName:"StaticResource",outName:"staticresources",suffix:".*"});
+		  	    fileMap.push({inName:"TopicsForObjects",outName:"topicsForObjects",suffix:".*"});
+	    	    fileMap.push({inName:"ValidationRule",outName:"objects",suffix:".*"});
+		  	    fileMap.push({inName:"WaveApplication",outName:"wave",suffix:".*"});
+		  	    fileMap.push({inName:"WaveDashboard",outName:"wave",suffix:".*"});
+		  	    fileMap.push({inName:"WaveDataflow",outName:"wave",suffix:".*"});
+		  	    fileMap.push({inName:"WaveDataset",outName:"wave",suffix:".*"});
+		  	    fileMap.push({inName:"WebLink",outName:"weblinks",suffix:".*"});
+	    	    fileMap.push({inName:"WorkflowAlert",outName:"workflows",suffix:".*"});
+	    	    fileMap.push({inName:"WorkflowFieldUpdate",outName:"workflows",suffix:".*"});
+	    	    fileMap.push({inName:"WorkflowFlowAction",outName:"workflows",suffix:".*"});
+	    	    fileMap.push({inName:"WorkflowRule",outName:"workflows",suffix:".*"});
+	    	    fileMap.push({inName:"WorkflowTask",outName:"workflows",suffix:".*"});
+		  	    fileMap.push({inName:"Workflow",outName:"workflows",suffix:".*"});
+	  	   	  }
+	  	   	
+			  //this function takes a pakcage.xml file name and loads the contents--putting members into an array and then saving the array with the name as the key
+	  	   	  function getFileContents(fName,passedMap) {
+ 	 	   		var packageFile = new File(fName).toURI();
+		        try {
+			        var cLines = java.nio.file.Files.readAllLines(java.nio.file.Paths.get(packageFile), java.nio.charset.Charset.forName('UTF-8'));
+	
+		        } catch (err) {
+		  				java.lang.System.out.println("###There was an error in getFileContents: "+err);
+		   				return nameMap;
+		        }
+	  	   	    nameMap = passedMap;
+	   	   		var members = new Array();
+	  	   		var nameFound = false;
+	  	   		var memberFound = false;
+		   		var existingMembers = new Array();
+	  	   		  //read through lines in the file
+			  	  for (var i = 0; i < cLines.size(); i++) {
+	  	   				if ( cLines.get(i).contains("<members>") ) {
+	  	   					members.push(cLines.get(i).split("<members>")[1].split("</members>")[0]);
+	  	   				} else if ( cLines.get(i).contains("<name>")) {
+	  	   					nameFound=false;
+	  	   	                for ( var j=0;j < nameMap.length; j++ ) {
+								if ( nameMap[j].name == cLines.get(i).split("<name>")[1].split("</name>")[0])  {
+	  	   							nameFound = true;
+									existingMembers = nameMap[j].members;
+									for (var k=0;k<existingMembers.length; k++ ) {
+	  	   								for ( l=0;l<members.length;l++ ) {
+	  	   									if ( existingMembers[k] == members[l] ) {
+	  	   										memberFound = true;
+	  	   										break;
+	  	   									}
+	  	   								}
+	  	   								if ( !memberFound ) {
+											 if ( nameMap[j].name == "Flow" && flowExists('getFileContents',nameMap[j].name,existingMembers[k]+".flow") ) {
+												//java.lang.System.out.println("skipping flow member from nameMap: name: "+nameMap[j].name+
+												//			" existing member: "+existingMembers[k]);
+											 } else {
+												members.push(existingMembers[k]);
+											 }
+	  	   								} else {
+	  	   								}
+	  	   								memberFound = false;
+									}
+									nameMap[j].members=members;
+									members = new Array();
+									break;
+								}//if
+				     		}//for
+							if ( !nameFound) {
+								nameMap.push({name:cLines.get(i).split("<name>")[1].split("</name>")[0],members: members});
+	   						}
+							members = new Array();
+	  	   				}//if
+	  	          }//for
+	  	  		nameMap.sort(function(a, b){ // sort names by object Name
+			  	  	var nameA=a.name.toLowerCase(), nameB=b.name.toLowerCase()
+			  	  	if (nameA < nameB) //sort string ascending
+			  	   		return -1 
+			  	  	if (nameA > nameB)
+			  	  		return 1
+			  	  	return 0 //default return value (no sorting)
+			  	  })
+	  	   		return nameMap.sort();
+	  	   	  }
+		   	  function getFlowFiles () {
+		   		  var fName = "test";
+		   		  var equals = false;
+			   	  var flows = new Array();
+			  	  var folder = new File(fullDirectory+"\\build\\flows");
+		  			java.lang.System.out.println("Loading flows from: "+fullDirectory+"\\build\\flows...");
+			  	  var listOfFiles = folder.listFiles();
+		   	      if ( listOfFiles != null && listOfFiles.length > 0 ) {
+			 	      for ( var i=0;i<listOfFiles.length;i++ ) {
+	  	  				flows.push(listOfFiles[i].getName());
+			 	      }
+		   		  } else {
+		  			java.lang.System.out.println("There are no flows to process...");
+		   		  }
+			  	  return flows;		
+		   	  }
+		   	  function getEntitlementFiles () {
+		   		  var fName = "test";
+		   		  var equals = false;
+			   	  var entitlements = new Array();
+			  	  var folder = new File(fullDirectory+"\\build\\entitlementProcesses");
+			  	  var listOfFiles = folder.listFiles();
+	  	   	      if ( listOfFiles != null && listOfFiles.length > 0 ) {
+			 	      for ( var i=0;i<listOfFiles.length;i++ ) {
+			  			entitlements.push(listOfFiles[i].getName());
+			 	      }
+	  	   		  } else {
+	  	  			java.lang.System.out.println("There are no entitlements to process...");
+	  	   		  }
+			  	  return entitlements;		
+		   	  }
+			  //this function get the list of package.xmls from the "release" directory for combining
+	  	   	  function getPackageFiles () {
+	  	   		  var fName = "test";
+	  	   		  var equals = false;
+							var sWork  = "";
+			   	  nameMap = new Array();
+						 var packageName = Array();
+			  	  var folder = new File(repoDirectory+"\\src\\build\\Releases\\"+release+"");
+			  	  var listOfFiles = folder.listFiles();
+	  	   	
+	  	   		  if ( listOfFiles == null ) {
+		  			java.lang.System.out.println("1-There aren't any package.xml's in the following folder: "+repoDirectory+"\\src\\build\\Releases\\"+release+"---exiting! path: "+java.lang.System.getProperty("user.dir"));
+	  	   			return nameMap;
+	  	   		  }
+			        for (var i = 0; i < listOfFiles.length; i++) {
+	  	   			  fName = listOfFiles[i];
+								sWork = fName+'';  	   	
+	  	   			  if ( singlePackage && (repoDirectory+"\\src\\build\\Releases\\"+release+"\\"+singlePackageStr) == fName ) {
+				   	    nameMap = getFileContents(fName,nameMap);
+								 packageName = sWork.split('/');
+				  	  	java.lang.System.out.println("2.1-file: "+fName+" stringlen: "+packageName.length);
+								 finalReport.push(packageName[packageName.length-1]);
+	  	   			  } else if (!singlePackage && fName != (repoDirectory+"\\src\\build\\Releases\\"+release+"\\.DS_Store") && 
+	  	  						fName != (repoDirectory+"\\src\\build\\Releases\\"+release+"\\Package_ALL.xml") && 
+								fName != (repoDirectory+"\\src\\build\\Releases\\Package_ALL_template.xml")) {
+								 packageName = sWork.split('/');
+				  	  	java.lang.System.out.println("2.2-file: "+fName+" stringlen: "+packageName.length);
+								 finalReport.push(packageName[packageName.length-1]);
+				   	    nameMap = getFileContents(fName,nameMap);
+	  	   			  }
+			        }
+	   		  	return nameMap;
+	  	   	  }
+	  	   	  function saveObject(dirName,objectName,extName) {
+	  	   			var workObject = "";
+	  	   			var found=false;
+	  	   			for ( var i=0;i<objectMap.length;i++ ) {
+	  	   				workObject = dirName+"/"+objectName+extName;
+	  	   				if ( objectMap[i].name == workObject ) {
+	  	   					found = true;
+	  	   					break;
+	  	   				}
+	  	   			}
+	  	   			if ( !found ) {
+		 				workObject = dirName+"\\"+objectName+extName;
+						objectMap.push({name:workObject});
+	  	   			}
+	  	   	  }
+			function flowExists(method,name,member) {
+		   		var flowFound = false;
+				for ( var l=0;l<flows.length;l++ ) {
+					work = flows[l];
+					//java.lang.System.out.println("10-FLOWS--looking for flow:  method: "+method+"\n"+member+" in list of flows: \n"+work+"...");
+					if ( member == work ) {
+						java.lang.System.out.println("##########Skipping flow:  method: "+method+" name: "+name+" name "+flows[l]+"-already exists...");
+						flowFound = true;
+						break;
+					}
+				}
+	  	   		return flowFound;
+	  	   	}
+	  	   	function entitlementExists(method,name,member) {
+	   		  	var entitlementFound = false;
+				for ( var l=0;l<entitlements.length;l++ ) {
+					work = entitlements[l];
+					if ( member == work ) {
+						java.lang.System.out.println("###Skipping entitlement: method: "+method+" name: "+name+" name "+entitlements[l]+"-already exists...");
+				 		entitlementFound = true;
+						break;
+					}
+				}
+	  	   		return entitlementFound;
+	  	   	}
+	  	   	function loadPackageTemplate(nameMap) {
+			  	  java.lang.System.out.println("loadPackageTemplate: reading template: "+repoDirectory+"\\src\\build\\Releases\\Package_ALL_template.xml - creating output file: "+
+				  	  repoDirectory+"\\src\\build\\Releases\\"+release+"\\Package_ALL.xml");
+			  	  var template = new File(repoDirectory+"\\src\\build\\Releases\\Package_ALL_template.xml").toURI();
+			      var packageAll  = new FileWriter(repoDirectory+"\\src\\build\\Releases\\"+release+"\\Package_ALL.xml");
+			      var packageFlow = new FileWriter(repoDirectory+"\\src\\build\\Releases\\"+release+"\\Package_FLOW.xml");
+			        try {
+		  	            var pLines = java.nio.file.Files.readAllLines(java.nio.file.Paths.get(template), java.nio.charset.Charset.forName('UTF-8'));
+			        } catch (err) {
+			  				java.lang.System.out.println("###There was an error in loadPackageTemplate: "+err);
+			   				return;
+			        }
+	  	   		  var flowFound = false;
+	  	   		  var entitlementFound = false;
+	  	   	      var member = "";
+	  	   		  var work   = "";
+	  	   		  var writeCount = 0;
+		   		  if ( nameMap == null || nameMap.length <= 0 ) {
+		  			java.lang.System.out.println("2-There aren't any package.xml's in the following folder: "+repoDirectory+"\\src\\build\\Releases\\"+release+"---exiting! path: "+java.lang.System.getProperty("user.dir"));
+		   			return;
+		   		  }
+			 		  java.lang.System.out.println("10-###loadPackageTemplate: Input file validation-flows: "+flows.length+" entitlements: "+entitlements.length+" template lines: "+pLines.size());
+						for (var i=0;i<pLines.size();i++ ) {
+		  	   			if ( pLines.get(i).contains("<!-- INSERT HERE -->")) { 
+	  	  					packageAll.write("\t<types>");
+					  	    packageAll.write(java.lang.System.getProperty("line.separator"));
+	  	  					packageFlow.write("\t<types>");
+					  	    packageFlow.write(java.lang.System.getProperty("line.separator"));
+			   					for (var k=0;k<nameMap.length;k++) {
+	  	   						flowFound = false;
+	  	   						entitlementFound = false;
+				   					for ( var j=0;j<nameMap[k].members.length;j++ ) {
+										  //java.lang.System.out.println("$$$loadPackageTemplate: "+nameMap[k]+" member: "+nameMap[k].members[j]);
+	  		   						//member = repoDirectory+"\\build\\flows\\"+nameMap[k].members[j]+".flow";
+	  	   							member = nameMap[k].members[j]+".flow";
+	  	   							/*if ( nameMap[k].name == "Flow" ) {
+												flowFound = flowExists('XMLCreation',nameMap[k].name,member);
+											}*/
+											//member = repoDirectory+"\\build\\entitlementProcesses\\"+nameMap[k].members[j]+".entitlementProcess";
+											member = nameMap[k].members[j]+".entitlementProcess";
+											if ( nameMap[k].name == "EntitlementProcess" ) {
+									  		entitlementFound = entitlementExists('XMLCreation',nameMap[k].name,member);
+	  	   							}
+	  	   							if ( !flowFound && !entitlementFound ) {
+									  		writeCount++;
+		  	   							if ( nameMap[k].name == "Flow" && !oneDeploy ) {
+													packageFlow.write("\t\t<members>"+nameMap[k].members[j]+"</members>");
+													packageFlow.write(java.lang.System.getProperty("line.separator"));
+												} else {
+													packageAll.write("\t\t<members>"+nameMap[k].members[j]+"</members>");
+													packageAll.write(java.lang.System.getProperty("line.separator"));
+												}
+										}
+					   			}
+									if ( writeCount > 0 ) {
+										if ( nameMap[k].name == "Flow" && !oneDeploy ) {
+											packageFlow.write("\t\t<name>"+nameMap[k].name+"</name>");
+											packageFlow.write(java.lang.System.getProperty("line.separator"));
+											packageFlow.write("\t</types>");
+											packageFlow.write(java.lang.System.getProperty("line.separator"));
+										} else {
+											packageAll.write("\t\t<name>"+nameMap[k].name+"</name>");
+											packageAll.write(java.lang.System.getProperty("line.separator"));
+											packageAll.write("\t</types>");
+											packageAll.write(java.lang.System.getProperty("line.separator"));
+										}
+										if ( k < nameMap.length-1 ) {
+											if ( nameMap[k].name == "Flow" && !oneDeploy ) {
+												//packageFlow.write("\t<types>");
+												//packageFlow.write(java.lang.System.getProperty("line.separator"));
+											} else {
+												packageAll.write("\t<types>");
+												packageAll.write(java.lang.System.getProperty("line.separator"));
+											}
+										}
+								  	writeCount=0;
+									}
+									if ( nameMap[k].name == "ApexClass" && !skipApex ) {
+										apexClasses = nameMap[k].members;
+										java.lang.System.out.println("found "+nameMap[k].name+" with "+nameMap[k].members.length+" records("+apexClasses.length+")");
+									}
+								}
+								packageFlow.write("\t<version>"+apiVersion+"</version>");
+								packageFlow.write(java.lang.System.getProperty("line.separator"));
+								packageAll.write("\t<version>"+apiVersion+"</version>");
+								packageAll.write(java.lang.System.getProperty("line.separator"));
+							} else {
+				  	    	packageFlow.write(pLines.get(i));
+									packageFlow.write(java.lang.System.getProperty("line.separator"));
+				  	    	packageAll.write(pLines.get(i));
+									packageAll.write(java.lang.System.getProperty("line.separator"));
+						}
+					}
+  	   	        	   				     
+		  		packageFlow.close();	   			
+		  		packageAll.close();	   			
+					project.setProperty("temp.work.nameMap",nameMap);
+					}
+	  	   	function createCodeBuildXML() {
+		  	  var template = new File(repoDirectory+"\\src\\build\\deploy_template.xml").toURI();
+		      var fullBuild = new FileWriter(repoDirectory+"\\full_build.xml");
+		      var flowBuild = new FileWriter(repoDirectory+"\\flow_build.xml");
+		        try {
+			        var xLines = java.nio.file.Files.readAllLines(java.nio.file.Paths.get(template), java.nio.charset.Charset.forName('UTF-8'));
+	  			    if ( showDebug )  java.lang.System.out.println("$$2.5-createCodeBuildXML-lines in deploy_template: "+xLines.size());
+		        } catch (err) {
+		  				java.lang.System.out.println("###There was an error in createCodeBuildXML: "+err);
+		   				return;
+		        }
+			  java.lang.System.out.println("###createCodeBuildXML:flowsSaved: "+flowsSaved);
+	   	      for (var i=0;i<xLines.size();i++ ) {
+		   			if ( xLines.get(i).contains("<!-- INSERT CLASSES HERE -->")) { 
+					   	  if ( checkBuild == "true" ) {
+						  	  fullBuild.write("\t\t\t\t\tcheckOnly=\"true\"");
+						  	  fullBuild.write(java.lang.System.getProperty("line.separator"));
+							  if ( flowsSaved > 0 ) {
+									if (!oneDeploy) {
+										flowBuild.write("\t\t\t\t\tcheckOnly=\"true\"");
+										flowBuild.write(java.lang.System.getProperty("line.separator"));
+									} else {
+										//fullBuild.write("\t\t\t\t\tcheckOnly=\"true\"");
+										//fullBuild.write(java.lang.System.getProperty("line.separator"));
+									}
+							  }
+					   	  }
+					   	  if ( apexClasses.length > 0 ) {
+						  	  fullBuild.write("\t\t\t\t\ttestLevel=\"RunSpecifiedTests\"");
+						  	  fullBuild.write(java.lang.System.getProperty("line.separator"));
+					   	  }
+					  	  fullBuild.write("\t\t\t\t\t>");
+					  	  fullBuild.write(java.lang.System.getProperty("line.separator"));
+						  if ( flowsSaved > 0 ) {
+									if (!oneDeploy) {
+										flowBuild.write("\t\t\t\t\t>");
+										flowBuild.write(java.lang.System.getProperty("line.separator"));
+									} /*else {
+										fullBuild.write("\t\t\t\t\t>");
+										fullBuild.write(java.lang.System.getProperty("line.separator"));
+									}*/
+						  }
+						for ( var j=0;j<apexClasses.length;j++ ) {
+	  	   				  if ( apexClasses[j].search(/test/i) >= 0) {
+						  	  fullBuild.write("\t\t\t\t\t<runTest>"+apexClasses[j]+"</runTest>");
+						  	  fullBuild.write(java.lang.System.getProperty("line.separator"));
+	  	   				  }
+						}
+				} else if ( xLines.get(i).contains("<!-- INSERT FILES HERE -->")) { 
+			        for ( var j=0;j < outFileMap.length; j++ ) {
+						if ( outFileMap[j].match("^flows/")) {
+							if ( flowsSaved > 0 ) {
+									if (!oneDeploy) {
+										flowBuild.write("\t\t\t\t<include name=\""+outFileMap[j]+"\"/>");
+										flowBuild.write(java.lang.System.getProperty("line.separator"));
+									} else {
+										fullBuild.write("\t\t\t\t<include name=\""+outFileMap[j]+"\"/>");
+										fullBuild.write(java.lang.System.getProperty("line.separator"));
+									}
+							}
+						} else {
+							fullBuild.write("\t\t\t\t<include name=\""+outFileMap[j]+"\"/>");
+							fullBuild.write(java.lang.System.getProperty("line.separator"));
+						}
+					}
+	 	        } else {
+			  	  fullBuild.write(xLines.get(i));
+			  	  fullBuild.write(java.lang.System.getProperty("line.separator"));
+  				  if ( flowsSaved > 0 ) {
+							if (!oneDeploy) {
+								flowBuild.write(xLines.get(i));
+								flowBuild.write(java.lang.System.getProperty("line.separator"));
+							} /*else {
+								fullBuild.write(xLines.get(i));
+								fullBuild.write(java.lang.System.getProperty("line.separator"));
+							}*/
+				  }
+				}
+		  }  
+			if ( flowsSaved <= 0 && !oneDeploy ) {
+				var emptyTemplate = new File(repoDirectory+"\\src\\build\\deploy_template_empty.xml").toURI();
+				try {
+					var eLines = java.nio.file.Files.readAllLines(java.nio.file.Paths.get(emptyTemplate), java.nio.charset.Charset.forName('UTF-8'));
+					if ( showDebug )  java.lang.System.out.println("$$2.6-createCodeBuildXML-lines in deploy_template_empty: "+eLines.size());
+				} catch (err) {
+					java.lang.System.out.println("###There was an error in createCodeBuildXML: "+err);
+					return;
+				}
+				if ( showDebug ) java.lang.System.out.println("$$2.6-createCodeBuildXML-flowsSaved: "+flowsSaved+"---writing to deploy_template_empty: "+eLines.size());
+				for (var i=0;i<eLines.size();i++ ) {
+						if ( showDebug )  java.lang.System.out.println("$$2.7-createCodeBuildXML-writing eLine: "+eLines.get(i));
+						flowBuild.write(eLines.get(i));
+						flowBuild.write(java.lang.System.getProperty("line.separator"));
+				}
+			}
+			fullBuild.close();	   			
+			flowBuild.close();	   			
+		}
+	  	   	function loadOutFileMap(nameMap) {
+	  	   		var work1 = "";
+	  	   		var work2 = "";
+			 	var saved = 0;
+				var flowFound = false;
+				var entitlementFound = false;
+			    for ( var j=0;j < nameMap.length; j++ ) {
+					saved = 0;
+			        for ( var k=0;k < fileMap.length; k++ ) {
+						if ( nameMap[j].name == fileMap[k].inName ) {
+		   					for ( var l=0;l<nameMap[j].members.length; l++ ) {
+								if (nameMap[j].name == "CustomObject" || nameMap[j].name == "CustomField" || nameMap[j].name == "BusinessProcess" || 
+	  	  								nameMap[j].name == "GlobalValueSetTranslation" || nameMap[j].name == "ListView" ||  
+	  	   								nameMap[j].name == "RecordType" || nameMap[j].name == "ValidationRule" ||
+										nameMap[j].name == "WorkflowAlert" || nameMap[j].name == "WorkflowFieldUpdate" ||  nameMap[j].name == "WorkflowFlowAction" ||
+										nameMap[j].name == "WorkflowRule" || nameMap[j].name == "WorkflowTask" 	) {
+	  	   							work1=nameMap[j].members[l];
+	  	   							if ( work1.indexOf(".") > 0 ) {
+									    work2=work1.substring(0,work1.indexOf("."));
+	  	   							} else {
+										 work2=work1
+									}
+  	   								saveObject ( fileMap[k].outName,work2,fileMap[k].suffix);
+								 	saved++;
+								} else if ( fileMap[k].outName == "email"  ) { 
+									saveObject ( fileMap[k].outName,nameMap[j].members[l].split('/')[0],fileMap[k].suffix);
+									outFileMap.push(fileMap[k].outName+"\\"+nameMap[j].members[l]+fileMap[k].suffix);
+								 	saved++;
+								} else if ( fileMap[k].outName == "weblinks"  ) { 
+	  	   							work1=nameMap[j].members[l];
+	  	   							if ( work1.indexOf(".") > 0 ) {
+									    work2=work1.substring(0,work1.indexOf("."));
+	  	   							}
+  	   								saveObject ( "objects",work2,fileMap[k].suffix);
+									outFileMap.push(fileMap[k].outName+"\\"+nameMap[j].members[l]+fileMap[k].suffix);
+								 	saved++;
+								} else if (fileMap[k].outName == "reports" || fileMap[k].outName == "documents" ) { 
+									saveObject ( fileMap[k].outName,nameMap[j].members[l].split('/')[0],fileMap[k].suffix);
+									outFileMap.push(fileMap[k].outName+"\\"+nameMap[j].members[l]+fileMap[k].suffix);
+								 	saved++;
+								} else if (fileMap[k].outName == "matchingRules" ) {
+									work1=nameMap[j].members[l];
+									if ( work1.indexOf(".") > 0 ) {
+									    work2=work1.substring(0,work1.indexOf("."));
+									}
+									saveObject ( fileMap[k].outName,work2,fileMap[k].suffix);
+								 	saved++;
+								} else if (fileMap[k].outName == "sharingRules" ) {
+									work1=nameMap[j].members[l];
+									if ( work1.indexOf(".") > 0 ) {
+									    work2=work1.substring(0,work1.indexOf("."));
+									}
+									saveObject ( fileMap[k].outName,work2,fileMap[k].suffix);
+								 	saved++;
+								} else if (fileMap[k].outName == "entitlementProcesses" ) {
+	  	   							//work = repoDirectory+"\\build\\entitlementProcesses\\"+nameMap[j].members[l]+".entitlementProcess";
+	  	   							work = nameMap[j].members[l]+".entitlementProcess";
+									if ( !entitlementExists('ZipCreation',nameMap[j].name,work)) {
+	  	   								outFileMap.push(fileMap[k].outName+"/"+nameMap[j].members[l]+fileMap[k].suffix);
+									 	saved++;
+	  	   							}
+								} else if (fileMap[k].outName == "flows" ) {
+									//work = repoDirectory+"\\build\\flows\\"+nameMap[j].members[l]+".flow";
+									work = nameMap[j].members[l]+".flow";
+									//if ( !flowExists('ZipCreation',nameMap[j].name,work)) {
+										outFileMap.push(fileMap[k].outName+"\\"+nameMap[j].members[l]+fileMap[k].suffix);
+									 	saved++;
+										flowsSaved++;
+									//}
+								} else if (fileMap[k].outName == "labels" ) {
+									saveObject ( fileMap[k].outName,"CustomLabels",".labels");
+								 	saved++;
+	  	   						} else if (fileMap[k].outName != "NONE" ) {
+									outFileMap.push(fileMap[k].outName+"\\"+nameMap[j].members[l]+fileMap[k].suffix);
+								 	saved++;
+	  	   						}	
+		   					}
+				   			break;
+						}
+					}//
+	  	   			java.lang.System.out.println("$$"+(j+1)+"-SAVED names( name: "+nameMap[j].name+")..members: "+nameMap[j].members.length+" actually saved: "+saved);
+		   		}
+	  	   		for ( var j=0;j<objectMap.length;j++ ) {
+		  	  	    if (showDebug) java.lang.System.out.println(""+(j+1)+"-saving objects: "+objectMap[j].name);
+					outFileMap.push(objectMap[j].name);	  	   			
+	  	   		}
+	  	   	}
+	  	   	loadObjectMap();
+	  	   	flows = getFlowFiles();
+		  		entitlements = getEntitlementFiles();
+					java.lang.System.out.println("1-Input file validation-flows: "+flows.length+" entitlements: "+entitlements.length);
+	 	    
+		  	   	loadPackageTemplate(getPackageFiles());
+						java.lang.System.out.println("BEFORE createCodeBuildXML-apexClasses: "+apexClasses.length);
+		  	   	loadOutFileMap(nameMap);
+		  	   	createCodeBuildXML();
+						java.lang.System.out.println("FINAL REPORT: "+"\n==========================");
+						 for ( var j=0;j < finalReport.length; j++ ) {
+								 java.lang.System.out.println(""+(j+1)+"-Packages/branches processed: "+finalReport[j]);
+						 }
+		  	   	if (showDebug) {
+			        for ( var j=0;j < nameMap.length; j++ ) {
+						java.lang.System.out.println(""+(j+1)+"-SAVED names( name: "+nameMap[j].name+" members: "+nameMap[j].members.length);
+				        for ( var k=0;k < fileMap.length; k++ ) {
+							if ( nameMap[j].name == fileMap[k].inName ) {
+								//outFileMap.push({name:fileMap[k].outName,members:nameMap[j].members});
+		  	   					for ( var l=0;l<nameMap[j].members.length; l++ ) {
+									java.lang.System.out.println("-----out name( name: \\src\\"+fileMap[k].outName+"\\"+nameMap[j].members[l]+".*");
+		  	   					}
+			   		   			break;
+							}
+			  		  }
+		  	   		}
+			        for ( var j=0;j < outFileMap.length; j++ ) {
+						java.lang.System.out.println("@@"+(j+1)+"-files to zipped: "+outFileMap[j]);
+			  		}
+		  	   	}
+
+	  	   ]]></script>
+	  		<ac:var name="work.nameMap" value="${temp.work.nameMap}"/>
+	  		<!--echo message="from script ${work.nameMap}..."/-->
+	  	</target>
+		
+		<!-- ===================================================================================================================================================== -->
+		<!-- OOTB Force.com ant targets -->
+
+		<!-- Retrieve an unpackaged set of metadata from your org -->
+		<!-- The file unpackaged/package.xml lists what is to be retrieved -->
+		<target name="retrieveUnpackaged">
+			<mkdir dir="retrieveUnpackaged"/>
+			<!-- Retrieve the contents into another directory -->
+			<sf:retrieve username="${dev.username}" password="${dev.password}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" retrieveTarget="retrieveUnpackaged" unpackaged="unpackaged/package.xml"/>
+		</target>
+
+		<!-- Retrieve all the items of a particular metadata type -->
+		<target name="bulkRetrieve">
+			<sf:bulkRetrieve username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" metadataType="${sf.metadataType}" retrieveTarget="retrieveUnpackaged"/>
+		</target>
+
+		<!-- Retrieve metadata for all the packages specified under packageNames -->
+		<target name="retrievePkg">
+			<sf:retrieve username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" retrieveTarget="retrieveOutput" packageNames="${sf.pkgName}"/>
+		</target>
+
+		<!-- Deploy the unpackaged set of metadata retrieved with retrieveUnpackaged and run tests in this organization's namespace only-->
+		<target name="deployUnpackaged">
+			<sf:deploy username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" deployRoot="retrieveUnpackaged" rollbackOnError="true"/>
+		</target>
+
+		<!-- Deploy a zip of metadata files to the org -->
+		<target name="deployZip">
+			<sf:deploy username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" zipFile="${sf.zipFile}" rollbackOnError="true"/>
+		</target>
+
+		<!-- Shows deploying code & running tests for code in directory -->
+		<target name="deployCode">
+			<!-- Upload the contents of the "codepkg" directory, running the tests for just 1 class -->
+			<sf:deploy username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" deployRoot="codepkg" testLevel="RunSpecifiedTests" rollbackOnError="true">
+				<runTest>SampleDeployClass</runTest>
+			</sf:deploy>
+		</target>
+
+		<!-- Shows deploying code with no TestLevel sepcified -->
+		<target name="deployCodeNoTestLevelSpecified">
+			<sf:deploy username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" deployRoot="codepkg" rollbackOnError="true"/>
+		</target>
+
+		<!-- Shows deploying code and running tests only within the org namespace -->
+		<target name="deployCodeRunLocalTests">
+			<sf:deploy username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" deployRoot="codepkg" rollbackOnError="true"  testlevel="RunLocalTests"/>
+		</target>
+
+		<!-- Shows removing code; only succeeds if done after deployCode sessionId="${sf.sessionId}" -->
+		<target name="undeployCode" depends="setEnv">
+			<echo message="Undeploying from ${work.serverurl} using ${work.deploy.location}..." />
+			<mkdir dir="${work.deploy.location}\destructiveChanges"/>
+			<copy file="${work.repo.location}\src\build\destructiveChanges_Package.xml"
+				tofile="${work.deploy.location}\destructiveChanges\package.xml" overwrite="true" failonerror="true"/>
+			<copy file="${work.repo.location}\src\build\releases\${work.release_branch}\destructiveChanges.xml"
+				tofile="${work.deploy.location}\destructiveChanges\destructiveChanges.xml" overwrite="true" failonerror="true"/>
+
+			<sf:deploy
+				username="${work.username}"
+				password="${work.password}" 
+				serverurl="${work.serverurl}" 
+				maxPoll="${sf.maxPoll}"  
+				pollWaitMillis="${sf.pollWaitMillis}" 
+				rollbackOnError="true"
+				singlePackage="true"
+				deployRoot="${work.deploy.location}\destructiveChanges"
+					>
+		
+			</sf:deploy>
+		</target>
+		<!--
+					testLevel="RunSpecifiedTests"
+					<runTest>TestBAMMVIPRLookup</runTest>
+		 -->
+
+		<!-- Shows retrieving code; only succeeds if done after deployCode -->
+		<target name="retrieveCode">
+			<!-- Retrieve the contents listed in the file codepkg/package.xml into the codepkg directory -->
+			<sf:retrieve username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" retrieveTarget="codepkg" unpackaged="codepkg/package.xml"/>
+		</target>
+
+		<!-- Shows deploying code, running all tests, and running tests (1 of which fails), and logging. -->
+		<target name="deployCodeFailingTest">
+			<!-- Upload the contents of the "codepkg" package, running all tests -->
+			<sf:deploy username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" deployRoot="codepkg" testLevel="RunAllTestsInOrg" rollbackOnError="true" logType="Debugonly"/>
+		</target>
+
+		<!-- Shows check only; never actually saves to the server -->
+		<target name="deployCodeCheckOnly">
+			<sf:deploy username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" deployRoot="codepkg" checkOnly="true"/>
+		</target>
+
+		<!-- Shows quick deployment of recent validation. Set the property sf.recentValidationId to your recent check only deployment Id -->
+		<target name="quickDeploy">
+			<sf:deployRecentValidation  username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" recentValidationId="${sf.recentValidationId}"/>
+		</target>
+
+		<!-- Shows cancel deployment of deploy request either pending or in progress. Set property sf.requestId to Id of pending or in progress deploy request -->
+		<target name="cancelDeploy">
+			<sf:cancelDeploy  username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}"  pollWaitMillis="${sf.pollWaitMillis}" requestId="${sf.requestId}"/>
+		</target>
+
+		<!-- Retrieve the information of all items of a particular metadata type -->
+		<target name="listMetadata">
+			<sf:listMetadata username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}" metadataType="${sf.metadataType}"/>
+		</target>
+
+		<!-- Retrieve the information on all supported metadata type -->
+		<target name="describeMetadata">
+			<sf:describeMetadata username="${sf.username}" password="${sf.password}" sessionId="${sf.sessionId}" serverurl="${sf.serverurl}"/>
+		</target>
+	</project>

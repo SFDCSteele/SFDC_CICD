@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customObject>true</customObject>
+    <description>Performance (Production, quality, timeliness) of the employee on a daily level.</description>
+    <motif>Custom40: Credit card</motif>
+</CustomTab>

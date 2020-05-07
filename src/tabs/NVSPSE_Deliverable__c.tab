@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customObject>true</customObject>
+    <description>The deliverable object is a custom object that will be used to represent individual deliverables grantee organizations will complete as part of their grant award</description>
+    <motif>Custom14: Hands</motif>
+</CustomTab>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Created by Lightning App Builder</description>
+    <flexiPage>VALERi_R_App_Page11</flexiPage>
+    <label>VALERI Home</label>
+    <motif>Custom29: PDA</motif>
+</CustomTab>

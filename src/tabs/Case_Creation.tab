@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <auraComponent>ViewsVeteranSearch</auraComponent>
+    <description>Lightning component used to create cases from a phone call from a Veteran.</description>
+    <label>Case Creation</label>
+    <motif>Custom9: Lightning</motif>
+</CustomTab>

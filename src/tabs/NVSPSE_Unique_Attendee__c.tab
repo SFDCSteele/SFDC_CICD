@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customObject>true</customObject>
+    <description>The NVSPSE unique attendee object is a custom object that will be used to collect and deduplicate attendees to ensure an accurate count of the number of veterans/servicemembers and training attendees to account for individuals attending more than deliverable one element.</description>
+    <motif>Custom15: People</motif>
+</CustomTab>
