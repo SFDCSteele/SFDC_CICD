@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>Tab to support links for the lightning version of VA Helpdesk appl. POC: Kishore Kerllopalli/ Enhancment - 60/ Case#00002412</description>
-    <label>Helpdesk Links</label>
-    <motif>Custom33: Desk</motif>
-    <page>VA_Helpdesk_Links</page>
-</CustomTab>

@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>Created by Lightning App Builder</description>
-    <flexiPage>VALERI_Manual_Post_Audit</flexiPage>
-    <label>VALERI Manual Post Audit</label>
-    <motif>Custom26: Flag</motif>
-</CustomTab>

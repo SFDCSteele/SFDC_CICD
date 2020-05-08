@@ -108,6 +108,10 @@
         <name>Layout</name>
     </types>
     <types>
+        <members>*</members>
+        <name>ListView</name>
+    </types>
+    <types>
         <members>CICD_Application_Permission_Set</members>
         <name>PermissionSet</name>
     </types>
