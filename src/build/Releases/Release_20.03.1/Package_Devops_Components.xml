@@ -33,15 +33,78 @@
         <name>CustomObject</name>
     </types>
     <types>
-        <members>*</members>
+        <members>Application_Request__c</members>
+        <members>AutomatedTestingResult__c</members>
+        <members>CICD_Build_Details__c</members>
+        <members>CICD_Environment__c</members>
+        <members>CICD_Package_Content__c</members>
+        <members>DTC_Application__c</members>
+        <members>DTC_Architecture_Design__c</members>
+        <members>DTC_Code_Review_Rubric__c</members>
+        <members>DTC_Exception_Components__c</members>
+        <members>DTC_Exception_Request__c</members>
+        <members>DTC_License_Types__c</members>
+        <members>DTC_Requested_Application__c</members>
+        <members>DTC_Reusable_Component__c</members>
+        <members>DTC_Security_Risk_Assessment__c</members>
         <name>CustomTab</name>
     </types>
     <types>
-        <members>*</members>
+        <members>AutomatedTestingResult</members>
+        <members>Automated_Testing_Result_Item</members>
+        <members>CICD_Build_Details</members>
+        <members>CICD_Package_Content</members>
+        <members>CI_CD_Framework_UtilityBar</members>
+        <members>DTC_Application</members>
+        <members>DTC_Application_Level</members>
+        <members>DTC_Architecture_Component</members>
+        <members>DTC_Architecture_Design</members>
+        <members>DTC_Architecture_Document</members>
+        <members>DTC_Code_Review_Finding</members>
+        <members>DTC_Code_Review_Rubric</members>
+        <members>DTC_Deployment_Detail</members>
+        <members>DTC_Deployment_Steps</members>
+        <members>DTC_Enhancement_Component</members>
+        <members>DTC_Exception_Component</members>
+        <members>DTC_Exception_Request_Record_Page</members>
+        <members>DTC_License_Forecast_Page</members>
+        <members>DTC_License_Type</members>
+        <members>DTC_License_Usage</members>
+        <members>DTC_Module_Enhancement_Requests</members>
+        <members>DTC_Requested_Application</members>
+        <members>DTC_Reusable_Component</members>
+        <members>DTC_Review_Date</members>
+        <members>DTC_Security_Risk_Assessment_Record_Page1</members>
+        <members>DTC_Sensitive_Security_Risk_Info</members>
         <name>FlexiPage</name>
     </types>
     <types>
-        <members>*</members>
+        <members>Application_Request__c-Existing Application Intake Layout - Submitter</members>
+        <members>Application_Request__c-New Application Intake Layout - Admins</members>
+        <members>Application_Request__c-New Application Intake Layout - Submitter</members>
+        <members>AutomatedTestingQueue__c-AutomatedTestingQueue Layout</members>
+        <members>AutomatedTestingResult__c-AutomatedTestingResult Layout</members>
+        <members>Automated_Testing_Result_Item__c-Apex Test Result Item Layout</members>
+        <members>CICD_Build_Details__c-CICD Build Details Layout</members>
+        <members>CICD_Environment__c-CICD Environment Layout</members>
+        <members>CICD_Package_Content__c-CICD Package Content Layout</members>
+        <members>DTC_Application_Level__c-DTC Application Level Layout</members>
+        <members>DTC_Application__c-DTC Application Layout</members>
+        <members>DTC_Architecture_Component__c-DTC Architecture Component Layout</members>
+        <members>DTC_Architecture_Design__c-DTC Architecture Design Layout</members>
+        <members>DTC_Architecture_Document__c-DTC Architecture Document Layout</members>
+        <members>DTC_Code_Review_Finding__c-DTC Code Review Finding Layout</members>
+        <members>DTC_Code_Review_Rubric__c-DTC Code Review Rubric Layout</members>
+        <members>DTC_Deployment_Detail__c-DTC Deployment Detail Layout</members>
+        <members>DTC_Deployment_Step__c-Deployment Step Layout</members>
+        <members>DTC_Enhancement_Component__c-DTC Enhancement Component Layout</members>
+        <members>DTC_Exception_Components__c-DTC Exception Component Layout</members>
+        <members>DTC_Exception_Request__c-DTC  Exception Request Layout</members>
+        <members>DTC_Requested_Application__c-DTC Requested Application Layout</members>
+        <members>DTC_Reusable_Component__c-DTC Reusable Component Layout</members>
+        <members>DTC_Review_Date__c-DTC Review Date Layout</members>
+        <members>DTC_Security_Risk_Assessment__c-DTC Security Risk Assessment Layout</members>
+        <members>DTC_Sensitive_Security_Risk_Info__c-DTC Sensitive Security Risk Info Layout</members>
         <name>Layout</name>
     </types>
     <types>
