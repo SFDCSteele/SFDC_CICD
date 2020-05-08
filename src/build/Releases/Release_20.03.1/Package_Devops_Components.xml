@@ -107,10 +107,10 @@
         <members>DTC_Sensitive_Security_Risk_Info__c-DTC Sensitive Security Risk Info Layout</members>
         <name>Layout</name>
     </types>
-    <types>
+    <!--types>
         <members>*</members>
         <name>ListView</name>
-    </types>
+    </types-->
     <types>
         <members>CICD_Application_Permission_Set</members>
         <name>PermissionSet</name>
