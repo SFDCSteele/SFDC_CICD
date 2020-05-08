@@ -288,6 +288,7 @@ global with sharing class DictionaryBuilder {
             } catch (Exception dme) {
                 System.debug('DictionaryBuilder v: '+restVersion+'-'+'3.2-executeBuild: did not find the application record: '+dme.getMessage());
                 app = new DTC_Application__c ();
+                app.Name						=	enhancements[0].Existing_Application_r_Name;
                 app.CF_Profile__c				=	enhancements[0].Existing_Application_r_CF_Profile_c;
                 app.Application_Description__c	=	enhancements[0].Existing_Application_r_Application_Description_c;
                 app.ContractIntegrator__c		=	enhancements[0].Existing_Application_r_ContractIntegrator_c;
@@ -330,6 +331,8 @@ global with sharing class DictionaryBuilder {
                         App_Enhancement_Description__c,
                         Business_Objective__c,
                         Release_Date__c,
+                        DTC_Architecture_Design__c,
+                        Existing_Application__c,
                         Is_there_a_change_in_PII_PHI__c,
                         Existing_Application__r.UI_Format__c,
                         Existing_Application__r.CF_Profile__c,
@@ -342,13 +345,16 @@ global with sharing class DictionaryBuilder {
                         Name_of_Dev_Sandbox__c,
                         Org__c,
                         Status__c,
+                        Deploy_Package_Name__c,
                         Deploy_Branch__c,
                         Deploy_Status__c
                        from Application_Request__c where Deploy_Package_Name__c = :packageXML.packageName];
              	
+                mer.Existing_Application__c=app.Id;
                 mer.Business_Sponsor__c = enhancements[0].Business_Sponsor_c;
                 mer.App_Enhancement_Description__c = enhancements[0].App_Enhancement_Description_c;
                 mer.Business_Objective__c = enhancements[0].Business_Objective_c;
+                mer.DTC_Architecture_Design__c = arch.Id;
                 mer.Release_Date__c = enhancements[0].Release_Date_c;
                 mer.Is_there_a_change_in_PII_PHI__c = enhancements[0].Is_there_a_change_in_PII_PHI_c;
                 mer.Contract__c = enhancements[0].Contract_c;
@@ -359,6 +365,7 @@ global with sharing class DictionaryBuilder {
                 mer.Name_of_Dev_Sandbox__c = enhancements[0].Name_of_Dev_Sandbox_c;
                 mer.Org__c = enhancements[0].Org_c;
                 mer.Status__c = enhancements[0].Status_c;
+                mer.Deploy_Package_Name__c=packageXML.packageName;
                 mer.Deploy_Branch__c = enhancements[0].Deploy_Branch_c;
                 mer.Deploy_Status__c = enhancements[0].Deploy_Status_c;
 
@@ -367,36 +374,40 @@ global with sharing class DictionaryBuilder {
                 System.debug('DictionaryBuilder v: '+restVersion+'-'+'5.1-Finding Application Requests: '+mer);
             } catch (Exception dme) {
                 System.debug('DictionaryBuilder v: '+restVersion+'-'+'5.2-executeBuild: did not find the application request record: '+dme.getMessage());
-                mer = new Application_Request__c();
-                mer.Business_Sponsor__c = enhancements[0].Business_Sponsor_c;
-                mer.App_Enhancement_Description__c = enhancements[0].App_Enhancement_Description_c;
-                mer.Business_Objective__c = enhancements[0].Business_Objective_c;
-                mer.Release_Date__c = enhancements[0].Release_Date_c;
-                mer.Is_there_a_change_in_PII_PHI__c = enhancements[0].Is_there_a_change_in_PII_PHI_c;
-                mer.Contract__c = enhancements[0].Contract_c;
-                mer.Business_Sponsor_CCB__c = enhancements[0].Business_Sponsor_CCB_c;
-                mer.Integration_Needed__c = enhancements[0].Integration_Needed_c;
-                mer.New_Application_Name__c = enhancements[0].New_Application_Name_c;
-                //mer.RecordType.Name = enhancements[0].
-                mer.Name_of_Dev_Sandbox__c = enhancements[0].Name_of_Dev_Sandbox_c;
-                mer.Org__c = enhancements[0].Org_c;
-                mer.Status__c = enhancements[0].Status_c;
-                mer.Deploy_Branch__c = enhancements[0].Deploy_Branch_c;
-                mer.Deploy_Status__c = enhancements[0].Deploy_Status_c;
-                
-                /*mer = new Application_Request__c (App_Enhancement_Description__c=enhancements[0].App_Enhancement_Description_c,
-                                                  DTC_Architecture_Design__c=arch.Id,
-                                                  Business_Objective__c=enhancements[0].Business_Objective_c,Existing_Application__c=app.Id,
-                                                  Business_Sponsor__c=enhancements[0].Business_Sponsor_c,Contract__c=enhancements[0].Contract_c,Integration_Needed__c=enhancements[0].Integration_Needed_c,
-                                                  Name_of_Dev_Sandbox__c=enhancements[0].Name_of_Dev_Sandbox_c,New_Application_Name__c=enhancements[0].New_Application_Name_c,Org__c=enhancements[0].Org_c,
-                                                  Deploy_Package_Name__c=packageXML.packageName,Release_Date__c=enhancements[0].Release_Date_c,Status__c=enhancements[0].Status_c);
-				*/
-                insert mer;
+                try {
+                    mer = new Application_Request__c();
+	                mer.Existing_Application__c=app.Id;
+                    mer.Business_Sponsor__c = enhancements[0].Business_Sponsor_c;
+                    mer.App_Enhancement_Description__c = enhancements[0].App_Enhancement_Description_c;
+                    mer.Business_Objective__c = enhancements[0].Business_Objective_c;
+	                mer.DTC_Architecture_Design__c = arch.Id;
+                    mer.Release_Date__c = enhancements[0].Release_Date_c;
+                    mer.Is_there_a_change_in_PII_PHI__c = enhancements[0].Is_there_a_change_in_PII_PHI_c;
+                    mer.Contract__c = enhancements[0].Contract_c;
+                    mer.Business_Sponsor_CCB__c = enhancements[0].Business_Sponsor_CCB_c;
+                    mer.Integration_Needed__c = enhancements[0].Integration_Needed_c;
+                    mer.New_Application_Name__c = enhancements[0].New_Application_Name_c;
+                    //mer.RecordType.Name = enhancements[0].
+                    mer.Name_of_Dev_Sandbox__c = enhancements[0].Name_of_Dev_Sandbox_c;
+                    mer.Org__c = enhancements[0].Org_c;
+                    mer.Status__c = enhancements[0].Status_c;
+                    mer.Deploy_Package_Name__c=packageXML.packageName;
+                    mer.Deploy_Branch__c = enhancements[0].Deploy_Branch_c;
+                    mer.Deploy_Status__c = enhancements[0].Deploy_Status_c;
+		            System.debug('DictionaryBuilder v: '+restVersion+'-'+'5.2.1-Preparing to Insert Application_Request__c: '+mer);
+	                insert mer;
+                    
+	            } catch (Exception dme1) {
+    	            System.debug('DictionaryBuilder v: '+restVersion+'-'+'5.2.2-executeBuild: did not find the application request record: '+dme1.getMessage());
+                }
+	            System.debug('DictionaryBuilder v: '+restVersion+'-'+'5.2.3-Record Inserted Application_Request__c: '+mer);
                 mer = [select Id,Name, 
+                        Existing_Application__c,
                         Existing_Application__r.Name,
                         Business_Sponsor__c,
                         App_Enhancement_Description__c,
                         Business_Objective__c,
+                        DTC_Architecture_Design__c,
                         Release_Date__c,
                         Is_there_a_change_in_PII_PHI__c,
                         Existing_Application__r.UI_Format__c,
@@ -410,11 +421,12 @@ global with sharing class DictionaryBuilder {
                         Name_of_Dev_Sandbox__c,
                         Org__c,
                         Status__c,
+                       	Deploy_Package_Name__c,
                         Deploy_Branch__c,
                         Deploy_Status__c
                        from Application_Request__c where  Id = :mer.Id];
             }
-            System.debug('DictionaryBuilder v: '+restVersion+'-'+'5.3-Inserted Application_Request__c: '+mer);
+            System.debug('DictionaryBuilder v: '+restVersion+'-'+'5.3-Re-queried Application_Request__c: '+mer);
             
             for (PackageTypes pck: packageXML.packageTypes) {
                 

@@ -1,33 +1,34 @@
 @isTest
 public class DictionaryBuilder_TEST {
     
-    Static final String testMessage = '{ \"enhancement\": [ { \"Existing_Application__r.Name\" : \"Recruitment Tracker\" , \"Business_Sponsor__c\" : \"Chris Jaqua\" ,'+
-        ' \"App_Enhancement_Description__c\" : \"VA Staffing Management System. February 2020 release with enhancements.\" , '+
-        '\"Business_Objective__c\" : \"HR Staffing Management System. HR across the VA recently modernized and centralized and we need this new capability to facilitate shared-services/support.\" ,'+
-        ' \"Release_Date__c\" : \"02/27/20\" , \"Is_there_a_change_in_PII_PHI__c\" : \"No\" , \"Existing_Application__r.UI_Format__c\" : \"Lightning Only\" , '+
-        '\"Existing_Application__r.CF_Profile__c\" : \"VA Base Platform\" , \"Contract__c\" : \"VA Internal Teams\" , \"Business_Sponsor_CCB__c\" : \"null\" , '+
-        '\"Integration_Needed__c\" : \"No\" , \"Name\" : \"Enhancement-000880\" , \"Existing_Application__r.Product_Owner__c\" : \"005t00000044m9aAAA\" , '+
-        '\"New_Application_Name__c\" : \"VA Recruitment Tracker\" , \"RecordType.Name\" : \"Application Enhancement\" , \"Name_of_Dev_Sandbox__c\" : \"HRINFODEV\" ,'+
-        ' \"Org__c\" : \"VA\" , \"Id\" : \"a0Kt00000040nOFEAY\" , \"Status__c\" : \"In Staging\" } ],                \"packageName\" : \"Package_VAHRS-ENH-000880.xml\",'+
-        '                \"packageTypes\" : [                    {\"packageType\" : \"CustomField\", \"packageMembers\" : [\"Notification__c.Active__c\",'+
-        '\"Notification__c.Critical_Module_Notification__c\",\"Notification__c.Critical_Org_Wide_Notification__c\",\"Notification__c.End_Date__c\",\"Notification__c.Message_Type__c\",'+
-        '\"Notification__c.Module_Name__c\",\"Notification__c.Module_Specific_Notification__c\",\"Notification__c.Notification_Message__c\",\"Notification__c.Org_Wide_Message__c\",'+
-        '\"Notification__c.Start_Date__c\",\"Notification__c.Within_Dates__c\",\"Position_Number__c.Assignment_Code__c\",\"Position_Number__c.Budgeted_Position_Flag__c\",'+
-        '\"Position_Number__c.Grade__c\",\"Position_Number__c.Last_Position_Action_Reason__c\",\"Position_Number__c.Position_Action_Effective_Date__c\",\"Position_Number__c.Position_Status__c\",'+
-        '\"Position_Number__c.Position_Vacancy_Excluded_Position__c\",\"Staffing_Request__c.Days_Announcement_Close_to_Cert_Issued__c\",\"Staffing_Request__c.Days_Tent_Offer_Accepted_to_Invest__c\",'+
-        '\"Staffing_Request__c.Days_Tentative_Offer_Sent_to_Accepted__c\",\"Staffing_Request__c.Prolonged_Start_Date_Reason__c\",\"Staffing_Request__c.Tentative_Offer_Accepted__c\",'+
-        '\"Staffing_Request__c.Tentative_Offer_to_Receive_Tentative_Off__c\"] },                    {\"packageType\" : \"FlexiPage\", \"packageMembers\" : [\"HRsuite_Home\"] },'+
-        '                    {\"packageType\" : \"Flow\", \"packageMembers\" : [\"BB_Notification_Updated\"] },                    {\"packageType\" : \"Layout\", '+
-        '\"packageMembers\" : [\"Notification__c-Notification Layout\",\"Position_Number__c-Position Number Layout\",\"Staffing_Request__c-HR Staffing View\",'+
-        '\"Staffing_Request__c-Staffing Request Layout\"] },                    {\"packageType\" : \"PermissionSet\", \"packageMembers\" : [\"HRRT_System_Edit\",\"HRsuite_StaffingAdmin\",'+
-        '\"HRsuite_StaffingUser\",\"HRsuite_SysAdmin\"] },                    {\"packageType\" : \"ReportType\", \"packageMembers\" : [\"Org_Position_with_Staffing_Request\",'+
-        '\"Recruitment_Tracker_Adhoc_Data\"] },                    {\"packageType\" : \"SharingCriteriaRule\", \"packageMembers\" : [\"Staffing_Request__c.HRsuite_VISN_10_Share_Region_Read\",'+
-        '\"Staffing_Request__c.HRsuite_VISN_12_Share_Region_Read\",\"Staffing_Request__c.HRsuite_VISN_15_Share_Region_Read\",\"Staffing_Request__c.HRsuite_VISN_16_Share_Region_Read\",'+
-        '\"Staffing_Request__c.HRsuite_VISN_17_Share_Region_Read\",\"Staffing_Request__c.HRsuite_VISN_19_Share_Region_Read\",\"Staffing_Request__c.HRsuite_VISN_1_Share_Region_Read\",'+
-        '\"Staffing_Request__c.HRsuite_VISN_20_Share_Region_Read\",\"Staffing_Request__c.HRsuite_VISN_21_Share_Region_Read\",\"Staffing_Request__c.HRsuite_VISN_22_Share_Region_Read\",'+
-        '\"Staffing_Request__c.HRsuite_VISN_23_Share_Region_Read\",\"Staffing_Request__c.HRsuite_VISN_2_Share_Region_Read\",\"Staffing_Request__c.HRsuite_VISN_4_Share_Region_Read\",'+
-        '\"Staffing_Request__c.HRsuite_VISN_5_Share_Region_Read\",\"Staffing_Request__c.HRsuite_VISN_6_Share_Region_Read\",\"Staffing_Request__c.HRsuite_VISN_7_Share_Region_Read\",'+
-        '\"Staffing_Request__c.HRsuite_VISN_8_Share_Region_Read\",\"Staffing_Request__c.HRsuite_VISN_9_Share_Region_Read\",\"Staffing_Request__c.VHA_Read_Only_All\"] }] }';
+    Static final String testMessage = '{ "enhancement" : [ { "Existing_Application__r.Name" : "Recruitment Tracker" , "Existing_Application__r.Go_Live_Date_Projected__c" : "2019-10-31" ,'+
+        ' "App_Enhancement_Description__c" : "VA Staffing Management System. February 2020 release with enhancements." , "Existing_Application__r.Deploy_Symbol__c" : "VAHRS" , '+
+        '"Release_Date__c" : "02/27/20" , "Is_there_a_change_in_PII_PHI__c" : "No" , "Contract__c" : "VA Internal Teams" , "RecordType.Name" : "empty" , "Integration_Needed__c" : "No" ,'+
+        ' "Name" : "Enhancement-000880" , "Name_of_Dev_Sandbox__c" : "HRINFODEV" ,'+
+        ' "Business_Sponsor__c" : "Chris Jaqua  Program Director, HR Systems Integration (HRSI)  Human Capital Management (HCM) (10A2A4)  Workforce Management and Consulting (10A2A)  Veterans Health Administration  US Department of Veterans Affairs  Office Phone# (405) 552-4345" ,'+
+        ' "Business_Objective__c" : "HR Staffing Management System. HR across the VA recently modernized and centralized and we need this new capability to facilitate shared-services/support." ,'+
+        ' "Existing_Application__r.Application_Description__c" : "Formerly VA HRSuite. HR Staffing Management System. HR across the VA recently modernized and centralized and we need this new capability to facilitate shared-services/support." ,'+
+        ' "Existing_Application__r.UI_Format__c" : "Lightning Only" , "Existing_Application__r.Go_Live_Date__c" : "2020-10-31" , "Existing_Application__r.Product_Owner__c" : "005t00000044m9aAAA" ,'+
+        ' "New_Application_Name__c" : "VA Recruitment Tracker" , "Existing_Application__r.Deploy_Merge_Branch__c" : "DTCMerge" , "Deploy_Status__c" : "Deployed to PROD" , "Deploy_Branch__c" : "VAHRS-ENH-000880" ,'+
+        ' "Existing_Application__r.CF_Profile__c" : "VA Base Platform" , "Org__c" : "VA" , "Id" : "a0Kt00000040nOFEAY" , "Status__c" : "Failed to Obtain Production Sign-Off" ,'+
+        ' "Existing_Application__r.ContractIntegrator__c" : "Citizen Developers - VA Internal teams" } ],                "packageName" : "Package_VAHRS-ENH-000880.xml",'+
+        '                "packageTypes" : [                    {"packageType" : "CustomField", "packageMembers" : ["Notification__c.Active__c","Notification__c.Critical_Module_Notification__c",'+
+        '"Notification__c.Critical_Org_Wide_Notification__c","Notification__c.End_Date__c","Notification__c.Message_Type__c","Notification__c.Module_Name__c","Notification__c.Module_Specific_Notification__c",'+
+        '"Notification__c.Notification_Message__c","Notification__c.Org_Wide_Message__c","Notification__c.Start_Date__c","Notification__c.Within_Dates__c","Position_Number__c.Assignment_Code__c",'+
+        ' "Position_Number__c.Budgeted_Position_Flag__c","Position_Number__c.Grade__c","Position_Number__c.Last_Position_Action_Reason__c","Position_Number__c.Position_Action_Effective_Date__c",'+
+        ' "Position_Number__c.Position_Status__c","Position_Number__c.Position_Vacancy_Excluded_Position__c","Staffing_Request__c.Days_Announcement_Close_to_Cert_Issued__c",'+
+        ' "Staffing_Request__c.Days_Tent_Offer_Accepted_to_Invest__c","Staffing_Request__c.Days_Tentative_Offer_Sent_to_Accepted__c","Staffing_Request__c.Prolonged_Start_Date_Reason__c",'+
+        ' "Staffing_Request__c.Tentative_Offer_Accepted__c","Staffing_Request__c.Tentative_Offer_to_Receive_Tentative_Off__c"] },'+
+        '                    {"packageType" : "FlexiPage", "packageMembers" : ["HRsuite_Home"] },                    {"packageType" : "Flow", "packageMembers" : ["BB_Notification_Updated"] },'+
+        '                    {"packageType" : "Layout", "packageMembers" : ["Notification__c-Notification Layout","Position_Number__c-Position Number Layout","Staffing_Request__c-HR Staffing View",'+
+        ' "Staffing_Request__c-Staffing Request Layout"] },                    {"packageType" : "PermissionSet", "packageMembers" : ["HRRT_System_Edit","HRsuite_StaffingAdmin","HRsuite_StaffingUser","HRsuite_SysAdmin"] },'+
+        '                    {"packageType" : "ReportType", "packageMembers" : ["Org_Position_with_Staffing_Request","Recruitment_Tracker_Adhoc_Data"] }, '+
+        '                   {"packageType" : "SharingCriteriaRule", "packageMembers" : ["Staffing_Request__c.HRsuite_VISN_10_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_12_Share_Region_Read",'+
+        '"Staffing_Request__c.HRsuite_VISN_15_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_16_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_17_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_19_Share_Region_Read",'+
+        ' "Staffing_Request__c.HRsuite_VISN_1_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_20_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_21_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_22_Share_Region_Read",'+
+        ' "Staffing_Request__c.HRsuite_VISN_23_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_2_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_4_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_5_Share_Region_Read",'+
+        ' "Staffing_Request__c.HRsuite_VISN_6_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_7_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_8_Share_Region_Read","Staffing_Request__c.HRsuite_VISN_9_Share_Region_Read",'+
+        ' "Staffing_Request__c.VHA_Read_Only_All"] }] }';
     
     @isTest static void testExecuteBuild() {
         

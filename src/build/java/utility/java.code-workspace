@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "/Users/williamsteele/Library/Mobile Documents/com~apple~CloudDocs/Personal/development/work"
+		},
+		{
+			"path": "/Users/williamsteele/Library/Mobile Documents/com~apple~CloudDocs/Salesforce/VA/VAWork/deployments"
+		},
+		{
+			"path": "/Users/williamsteele/Library/Mobile Documents/com~apple~CloudDocs/Salesforce/VA/VAWork/deployments/work/sfdx"
+		},
+		{
+			"path": "/Users/williamsteele/Documents/Code Reviews"
+		},
+		{
+			"path": "/Users/williamsteele/Documents/Salesforce/VA/VAWork/deployments"
+		}
+	],
+	"settings": {
+		"git.ignoreLimitWarning": true
+	}
+}
